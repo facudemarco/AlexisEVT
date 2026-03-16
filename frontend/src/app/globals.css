@@ -4,11 +4,16 @@
   --color-brand-primary: #1D5D8C;
   --color-brand-secondary: #0D8BB0;
   --color-brand-accent: #1D5D8C;
+  --color-brand-navy: #2A3771;
+  --color-brand-yellow: #E5D739;
+  --color-brand-red: #DC3E36;
+  --color-brand-green: #308141;
   --color-success: #22C55E;
   --color-warning: #EAB308;
   --color-error: #EF4444;
   --color-surface-bg: #F8FAFC;
   --color-surface-card: #FFFFFF;
+  --color-surface-muted: #EAEAEA;
   --radius-xl: 1rem;
   --radius-lg: 0.75rem;
   --radius-md: 0.5rem;
@@ -29,4 +34,12 @@
     background-color: var(--color-surface-bg);
     color: var(--color-gray-900);
   }
+}
+
+@utility clip-triangle-tr {
+  clip-path: polygon(0 0, 100% 0, 100% 100%);
+}
+
+@utility clip-triangle-br {
+  clip-path: polygon(100% 0, 100% 100%, 0 100%);
 }
