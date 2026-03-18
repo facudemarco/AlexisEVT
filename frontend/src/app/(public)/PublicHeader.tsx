@@ -2,6 +2,7 @@
 
 import { PlaneTakeoff, Menu, UserCircle } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { usePathname } from "next/navigation";
 
@@ -17,10 +18,8 @@ export function PublicHeader() {
     <header className={headerClasses}>
       <div className="container mx-auto px-4 lg:px-12 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2">
-          {/* Logo Placeholder - As in Figma */}
-          <div className="w-24 h-24 bg-white rounded-full flex flex-col items-center justify-center p-2 shadow-lg border-2 border-brand-primary">
-             <PlaneTakeoff className="w-10 h-10 text-brand-primary" />
-             <span className="text-[10px] font-bold text-center text-brand-primary leading-tight mt-1">Alexis EVT<br/>Legajo 12712</span>
+          <div className="w-[120px] h-[120px] rounded-full flex flex-col items-center justify-center p-0 overflow-hidden shadow-xl border-[3px] border-brand-primary relative">
+             <Image src="/resources/logo.png" alt="Alexis EVT Logo" fill className="object-cover" />
           </div>
         </Link>
 

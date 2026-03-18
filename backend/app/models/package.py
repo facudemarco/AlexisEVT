@@ -1,10 +1,10 @@
-from sqlalchemy import Column, Integer, String, Float, Date, Boolean, ForeignKey, Table
+from sqlalchemy import Column, Integer, String, Float, Date, Boolean, ForeignKey, Table, SmallInteger, DECIMAL, JSON, Time
 from sqlalchemy.orm import relationship
 from app.db.session import Base
 
 # Relationship Tables for M2M mappings
 paquete_hotel_table = Table(
-    "paquete_hotel", Base.metadata,
+    "paquetes_hoteles", Base.metadata,
     Column("paquete_id", Integer, ForeignKey("paquetes.id", ondelete="CASCADE"), primary_key=True),
     Column("hotel_id", Integer, ForeignKey("hoteles.id", ondelete="CASCADE"), primary_key=True)
 )
@@ -22,9 +22,9 @@ paquete_servicio_table = Table(
 )
 
 paquete_punto_ascenso_table = Table(
-    "paquete_punto_ascenso", Base.metadata,
+    "paquetes_puntoascenso", Base.metadata,
     Column("paquete_id", Integer, ForeignKey("paquetes.id", ondelete="CASCADE"), primary_key=True),
-    Column("punto_ascenso_id", Integer, ForeignKey("puntos_ascenso.id", ondelete="CASCADE"), primary_key=True)
+    Column("punto_id", Integer, ForeignKey("puntos_ascenso.id", ondelete="CASCADE"), primary_key=True)
 )
 
 class Paquete(Base):
@@ -39,8 +39,28 @@ class Paquete(Base):
     fecha_regreso = Column(Date, nullable=False)
     duracion_dias = Column(Integer, nullable=False)
     duracion_noches = Column(Integer, nullable=False)
-    precio_base = Column(Float, nullable=False)
-    estado = Column(Boolean, default=True) # Activo / Inactivo
+    precio_base = Column(DECIMAL(10, 2), nullable=False)
+    estado = Column(Boolean, default=True)  # Activo / Inactivo
+
+    # New columns
+    imagen_url = Column(String(500), nullable=True)
+    regimen = Column(String(100), nullable=True)
+    gastos_reserva = Column(DECIMAL(10, 2), default=0)
+    salidas_diarias = Column(Boolean, default=False)
+    # Additional fields for detailed package info
+    periodo = Column(String(100), nullable=True)
+    moneda = Column(String(10), nullable=True, default='ARS')
+    adicionales_json = Column(JSON, nullable=True)
+    transporte_incluido = Column(Boolean, default=False)
+    transporte_empresa = Column(String(150), nullable=True)
+    transporte_tipo = Column(String(100), nullable=True)
+    horario_salida = Column(Time, nullable=True)
+    horario_regreso = Column(Time, nullable=True)
+    alojamiento_incluido = Column(Boolean, default=True)
+    alojamiento_noches = Column(Integer, nullable=True)
+    created_at = Column(Date, nullable=True)
+    deleted_at = Column(Date, nullable=True)
+
 
     # Relationships
     destino = relationship("Destino")
@@ -51,3 +71,4 @@ class Paquete(Base):
     puntos_ascenso = relationship("PuntoAscenso", secondary=paquete_punto_ascenso_table)
     
     reservas = relationship("Reserva", back_populates="paquete")
+

@@ -13,6 +13,14 @@ def read_paquetes(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)
     """Público: Lista los paquetes."""
     return crud_package.get_paquetes(db, skip=skip, limit=limit)
 
+@router.get("/by-category/{slug}", response_model=List[Paquete])
+def read_paquetes_by_category(slug: str, db: Session = Depends(get_db)):
+    """Público: Lista los paquetes activos por slug de categoría."""
+    categoria = crud_package.get_categoria_by_slug(db, slug=slug)
+    if not categoria:
+        raise HTTPException(status_code=404, detail="Categoría no encontrada")
+    return crud_package.get_paquetes_by_category_slug(db, slug=slug)
+
 @router.get("/{id}", response_model=Paquete)
 def read_paquete(id: int, db: Session = Depends(get_db)):
     """Público: Detalle de un paquete."""
@@ -25,3 +33,4 @@ def read_paquete(id: int, db: Session = Depends(get_db)):
 def create_paquete(paquete_in: PaqueteCreate, db: Session = Depends(get_db)):
     """Solo Admin: Crea un nuevo paquete con sus relaciones M2M."""
     return crud_package.create_paquete(db=db, paquete=paquete_in)
+
