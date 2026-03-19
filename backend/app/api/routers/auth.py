@@ -22,4 +22,4 @@ def login_for_access_token(db: Session = Depends(get_db), form_data: OAuth2Passw
     access_token = create_access_token(
         subject=user.id, expires_delta=access_token_expires
     )
-    return {"access_token": access_token, "token_type": "bearer", "rol": user.rol.value}
+    return {"access_token": access_token, "token_type": "bearer", "rol": user.rol.value, "nombre": user.nombre}

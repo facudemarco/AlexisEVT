@@ -20,6 +20,16 @@ def create(db: Session, model: Type[ModelType], obj_in: CreateSchemaType) -> Mod
     db.refresh(db_obj)
     return db_obj
 
+def update(db: Session, model: Type[ModelType], id: int, obj_in: CreateSchemaType) -> ModelType | None:
+    obj = db.query(model).get(id)
+    if not obj:
+        return None
+    for key, value in obj_in.model_dump(exclude_unset=True).items():
+        setattr(obj, key, value)
+    db.commit()
+    db.refresh(obj)
+    return obj
+
 def remove(db: Session, model: Type[ModelType], id: int) -> ModelType | None:
     obj = db.query(model).get(id)
     if obj:

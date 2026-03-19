@@ -1,6 +1,6 @@
 from pydantic import BaseModel
-from typing import Optional, List
-from datetime import date
+from typing import Optional, List, Dict, Any
+from datetime import date, time
 from app.schemas.config import Destino, Categoria, Hotel, Transporte, Servicio, PuntoAscenso
 
 
@@ -33,8 +33,8 @@ class PaqueteBase(BaseModel):
     duracion_noches: int
     precio_base: float
     precio_adicional: float = 0
-    moneda: str = "ARS"
-    tipo_salidas: str = "FECHA_ESPECIFICA"   # DIARIAS | FECHA_ESPECIFICA
+    moneda: Optional[str] = "ARS"
+    tipo_salidas: str = "FECHA_ESPECIFICA"
     imagen_url: Optional[str] = None
     adicionales: List[str] = []
     sobre_el_destino: Optional[str] = None
@@ -42,13 +42,10 @@ class PaqueteBase(BaseModel):
     include_asistencia_medica: bool = True
     es_borrador: bool = False
     estado: bool = True
-    imagen_url: Optional[str] = None
     regimen: Optional[str] = None
     gastos_reserva: float = 0
     salidas_diarias: bool = False
-    # Additional detail fields
     periodo: Optional[str] = None
-    moneda: Optional[str] = None
     adicionales_json: Optional[Dict[str, Any]] = None
     transporte_incluido: Optional[bool] = None
     transporte_empresa: Optional[str] = None
@@ -85,14 +82,10 @@ class PaqueteUpdate(BaseModel):
     include_asistencia_medica: Optional[bool] = None
     es_borrador: Optional[bool] = None
     estado: Optional[bool] = None
-<<<<<<< HEAD
-    imagen_url: Optional[str] = None
     regimen: Optional[str] = None
     gastos_reserva: Optional[float] = None
     salidas_diarias: Optional[bool] = None
-    # Additional detail fields for update
     periodo: Optional[str] = None
-    moneda: Optional[str] = None
     adicionales_json: Optional[Dict[str, Any]] = None
     transporte_incluido: Optional[bool] = None
     transporte_empresa: Optional[str] = None
@@ -101,10 +94,7 @@ class PaqueteUpdate(BaseModel):
     horario_regreso: Optional[time] = None
     alojamiento_incluido: Optional[bool] = None
     alojamiento_noches: Optional[int] = None
-    hotel_ids: Optional[List[int]] = None
-=======
     hotel_detalles: Optional[List[PaqueteHotelDetalleCreate]] = None
->>>>>>> 2ceb188 (Add cards)
     transporte_ids: Optional[List[int]] = None
     servicio_ids: Optional[List[int]] = None
     punto_ascenso_ids: Optional[List[int]] = None
@@ -125,4 +115,3 @@ class PaqueteInDBBase(PaqueteBase):
 
 class Paquete(PaqueteInDBBase):
     pass
-

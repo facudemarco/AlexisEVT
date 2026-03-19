@@ -17,9 +17,6 @@ def read_paquetes(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)
 @router.get("/by-category/{slug}", response_model=List[Paquete])
 def read_paquetes_by_category(slug: str, db: Session = Depends(get_db)):
     """Público: Lista los paquetes activos por slug de categoría."""
-    categoria = crud_package.get_categoria_by_slug(db, slug=slug)
-    if not categoria:
-        raise HTTPException(status_code=404, detail="Categoría no encontrada")
     return crud_package.get_paquetes_by_category_slug(db, slug=slug)
 
 @router.get("/{id}", response_model=Paquete)

@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional, List
+from typing import Optional, List, Any
 
 # --- Generic Config Schema ---
 class ConfigItemBase(BaseModel):
@@ -14,9 +14,21 @@ class ConfigItemInDBBase(ConfigItemBase):
     class Config:
         from_attributes = True
 
-# Destino / Categoria
-class Destino(ConfigItemInDBBase): pass
-class DestinoCreate(ConfigItemCreate): pass
+# Destino
+class DestinoBase(BaseModel):
+    nombre: str
+    sigla: Optional[str] = None
+    descripcion: Optional[str] = None
+    es_combinado: bool = False
+    destino_ids: Optional[List[int]] = None
+
+class DestinoCreate(DestinoBase): pass
+class DestinoUpdate(DestinoBase): pass
+
+class Destino(DestinoBase):
+    id: int
+    class Config:
+        from_attributes = True
 
 class Categoria(ConfigItemInDBBase):
     slug: Optional[str] = None
@@ -27,11 +39,14 @@ class CategoriaCreate(ConfigItemCreate):
 
 # Hotel (con campos extendidos)
 class HotelBase(ConfigItemBase):
+    telefono: Optional[str] = None
+    destino_id: Optional[int] = None
     direccion: Optional[str] = None
     descripcion: Optional[str] = None
     imagenes: List[str] = []
 
 class HotelCreate(HotelBase): pass
+class HotelUpdate(HotelBase): pass
 
 class Hotel(HotelBase):
     id: int
@@ -40,12 +55,14 @@ class Hotel(HotelBase):
 
 # Transporte (con scheduling)
 class TransporteBase(ConfigItemBase):
+    razon_social: Optional[str] = None
     tipo: Optional[str] = None
     horario_salida_desde: Optional[str] = None
     horario_salida_hasta: Optional[str] = None
     horario_regreso: Optional[str] = None
 
 class TransporteCreate(TransporteBase): pass
+class TransporteUpdate(TransporteBase): pass
 
 class Transporte(TransporteBase):
     id: int
@@ -67,7 +84,12 @@ class PuntoAscenso(BaseModel):
 
 class PuntoAscensoCreate(BaseModel):
     nombre_lugar: str
-    direccion_maps: str
-    horario_default: str
+    direccion_maps: str = ""
+    horario_default: str = "00:00"
+
+class PuntoAscensoUpdate(BaseModel):
+    nombre_lugar: Optional[str] = None
+    direccion_maps: Optional[str] = None
+    horario_default: Optional[str] = None
 
 

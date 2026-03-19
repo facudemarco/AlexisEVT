@@ -1,15 +1,8 @@
-<<<<<<< HEAD
 from sqlalchemy.orm import Session, joinedload
-from app.models.package import Paquete
-from app.models.config import Categoria, Hotel, Transporte, Servicio, PuntoAscenso
-from app.schemas.package import PaqueteCreate
-=======
-from sqlalchemy.orm import Session
 from app.models.package import Paquete, PaqueteHotel
+from app.models.config import Categoria, Hotel, Transporte, Servicio, PuntoAscenso
 from app.schemas.package import PaqueteCreate, PaqueteUpdate
-from app.models.config import Transporte, Servicio, PuntoAscenso
 
->>>>>>> 2ceb188 (Add cards)
 
 def get_paquete(db: Session, paquete_id: int):
     return db.query(Paquete).filter(Paquete.id == paquete_id).first()
@@ -27,7 +20,7 @@ def get_paquetes_by_category_slug(db: Session, slug: str):
         .options(
             joinedload(Paquete.destino),
             joinedload(Paquete.categoria),
-            joinedload(Paquete.hoteles),
+            joinedload(Paquete.hotel_detalles),
         )
         .filter(Categoria.slug == slug)
         .filter(Paquete.estado == True)
@@ -48,13 +41,6 @@ def create_paquete(db: Session, paquete: PaqueteCreate):
         duracion_dias=paquete.duracion_dias,
         duracion_noches=paquete.duracion_noches,
         precio_base=paquete.precio_base,
-<<<<<<< HEAD
-        estado=paquete.estado,
-        imagen_url=paquete.imagen_url,
-        regimen=paquete.regimen,
-        gastos_reserva=paquete.gastos_reserva,
-        salidas_diarias=paquete.salidas_diarias,
-=======
         precio_adicional=paquete.precio_adicional,
         moneda=paquete.moneda,
         tipo_salidas=paquete.tipo_salidas,
@@ -65,7 +51,9 @@ def create_paquete(db: Session, paquete: PaqueteCreate):
         include_asistencia_medica=paquete.include_asistencia_medica,
         es_borrador=paquete.es_borrador,
         estado=paquete.estado,
->>>>>>> 2ceb188 (Add cards)
+        regimen=paquete.regimen,
+        gastos_reserva=paquete.gastos_reserva,
+        salidas_diarias=paquete.salidas_diarias,
     )
 
     # Hotel detalles (association object con régimen y noches)
@@ -84,8 +72,6 @@ def create_paquete(db: Session, paquete: PaqueteCreate):
     db.refresh(db_paquete)
     return db_paquete
 
-<<<<<<< HEAD
-=======
 
 def update_paquete(db: Session, paquete_id: int, paquete_in: PaqueteUpdate):
     db_paquete = get_paquete(db, paquete_id)
@@ -130,4 +116,3 @@ def delete_paquete(db: Session, paquete_id: int):
         db.delete(db_paquete)
         db.commit()
     return db_paquete
->>>>>>> 2ceb188 (Add cards)

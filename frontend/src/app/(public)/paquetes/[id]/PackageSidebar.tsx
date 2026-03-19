@@ -21,7 +21,7 @@ export function PackageSidebar({ paquete }: Props) {
   const [menores, setMenores] = useState(0);
 
   return (
-    <div className="sticky top-6 space-y-4">
+    <div className="space-y-4">
       {/* Precio */}
       <div className="bg-white rounded-2xl shadow p-6 space-y-4">
         <p className="text-sm text-gray-600">Precio por persona</p>

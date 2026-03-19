@@ -21,10 +21,11 @@ export function Footer() {
         {/* Columna 1: Logo */}
         <div className="flex justify-center lg:justify-start lg:w-[15%]">
           <div className="relative w-40 h-40">
-            <Image 
-              src="/resources/logo.png" 
-              alt="Alexis EVT Logo" 
-              fill 
+            <Image
+              src="/resources/logo.png"
+              alt="Alexis EVT Logo"
+              fill
+              sizes="160px"
               className="object-contain"
             />
           </div>

@@ -110,7 +110,7 @@ export default async function PackageDetailPage({
         <div className="flex flex-col lg:flex-row gap-8 items-start">
 
           {/* ── Sidebar (sticky) ────────────────────────────────────────── */}
-          <aside className="w-full lg:w-[300px] xl:w-[320px] flex-shrink-0">
+          <aside className="w-full lg:w-[300px] xl:w-[320px] flex-shrink-0 self-start sticky top-6">
             <PackageSidebar paquete={paquete} />
           </aside>
 

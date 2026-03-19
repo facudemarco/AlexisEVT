@@ -1,61 +1,106 @@
 "use client";
-import { PlaneTakeoff, LayoutDashboard, Ticket, Users, MapPin, Settings, LogOut } from "lucide-react";
+
 import Link from "next/link";
+import Image from "next/image";
+import { usePathname } from "next/navigation";
 import { AuthGuard } from "@/components/auth-guard";
 import { useAuth } from "@/components/auth-provider";
+import { PublicHeader } from "@/app/(public)/PublicHeader";
+import { CallToActionBanner } from "@/components/home/CallToActionBanner";
+import { Footer } from "@/components/home/Footer";
+import { Package, Settings, BookOpen, Newspaper, LogOut } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+const navItems = [
+  { href: "/admin/packages",  label: "Paquetes",   icon: Package },
+  { href: "/admin/config",    label: "Parámetros", icon: Settings },
+  { href: "/admin/bookings",  label: "Reservas",   icon: BookOpen },
+  { href: "/admin/cartelera", label: "Cartelera",  icon: Newspaper },
+];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  const { logout } = useAuth();
+  const { logout, nombre, role } = useAuth();
+  const pathname = usePathname();
 
   return (
     <AuthGuard>
-      <div className="flex min-h-screen bg-surface-bg">
-        {/* Sidebar Admin */}
-        <aside className="w-64 bg-white border-r border-gray-200 hidden md:flex flex-col shadow-sm">
-          <div className="h-16 flex items-center px-6 border-b border-gray-200">
-            <Link href="/admin" className="flex items-center gap-2 font-bold text-xl text-brand-primary">
-              <PlaneTakeoff className="w-6 h-6 text-brand-accent" />
-              <span>AlexisEVT Admin</span>
-            </Link>
-          </div>
+      <div className="flex flex-col min-h-screen">
 
-          <nav className="flex-1 p-4 space-y-1">
-            <Link href="/admin" className="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md text-gray-700 hover:text-brand-primary hover:bg-gray-50 transition-colors">
-              <LayoutDashboard className="w-5 h-5" /> Dashboard
-            </Link>
-            <Link href="/admin/packages" className="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md text-gray-700 hover:text-brand-primary hover:bg-gray-50 transition-colors">
-              <PlaneTakeoff className="w-5 h-5" /> Paquetes
-            </Link>
-            <Link href="/admin/bookings" className="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md text-gray-700 hover:text-brand-primary hover:bg-gray-50 transition-colors">
-              <Ticket className="w-5 h-5" /> Reservas
-            </Link>
-            <div className="pt-4 pb-2">
-              <p className="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Ajustes</p>
+        {/* Header con video */}
+        <div className="relative h-[180px] md:h-[220px] bg-gray-900 overflow-hidden flex-shrink-0">
+          <video
+            src="/resources/hero.mp4"
+            autoPlay loop muted playsInline
+            className="absolute inset-0 w-full h-full object-cover opacity-70"
+          />
+          <div className="absolute inset-0 bg-black/30" />
+          <PublicHeader />
+          {/* Nombre + rol bottom-right */}
+          {nombre && (
+            <div className="absolute bottom-4 right-6 md:right-12 z-20 text-white font-semibold text-sm drop-shadow">
+              {nombre} — {role === "admin" ? "Admin" : "Vendedor/a"}
             </div>
-            <Link href="/admin/users" className="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md text-gray-700 hover:text-brand-primary hover:bg-gray-50 transition-colors">
-              <Users className="w-5 h-5" /> Vendedores
-            </Link>
-            <Link href="/admin/cartelera" className="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md text-gray-700 hover:text-brand-primary hover:bg-gray-50 transition-colors">
-              <MapPin className="w-5 h-5" /> Cartelera Pública
-            </Link>
-            <Link href="/admin/config" className="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md text-gray-700 hover:text-brand-primary hover:bg-gray-50 transition-colors">
-              <Settings className="w-5 h-5" /> Parámetros
-            </Link>
-          </nav>
-
-          <div className="p-4 border-t border-gray-200">
-            <button onClick={logout} className="flex items-center w-full gap-3 px-3 py-2 text-sm font-medium rounded-md text-red-600 hover:bg-red-50 transition-colors">
-              <LogOut className="w-5 h-5" /> Cerrar Sesión
-            </button>
-          </div>
-        </aside>
-
-        {/* Main Content Area */}
-        <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-          <main className="flex-1 overflow-y-auto">
-            {children}
-          </main>
+          )}
         </div>
+
+        {/* Layout principal: card centrada sobre fondo celeste */}
+        <div className="flex-1 bg-[#B8D9EA] flex items-start justify-center py-10 px-4 relative">
+          <div className="w-full max-w-5xl flex rounded-2xl overflow-hidden shadow-xl min-h-[520px]">
+
+            {/* Sidebar azul */}
+            <aside className="w-52 bg-[#1D5D8C] flex flex-col flex-shrink-0">
+              {/* Logo */}
+              <Link href="/admin" className="flex justify-center py-8">
+                <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-white/40 relative hover:border-white/70 transition-colors">
+                  <Image src="/resources/logo.png" alt="Logo" fill sizes="96px" className="object-cover" />
+                </div>
+              </Link>
+
+              {/* Nav */}
+              <nav className="flex-1 px-3 space-y-1">
+                {navItems.map(({ href, label, icon: Icon }) => (
+                  <Link
+                    key={href}
+                    href={href}
+                    className={cn(
+                      "flex items-center gap-3 px-4 py-3 rounded-lg text-base font-semibold transition-colors",
+                      pathname.startsWith(href)
+                        ? "bg-white/20 text-white"
+                        : "text-white/80 hover:bg-white/10 hover:text-white"
+                    )}
+                  >
+                    <Icon className="w-5 h-5 flex-shrink-0" />
+                    {label}
+                  </Link>
+                ))}
+              </nav>
+
+              {/* Cerrar sesión */}
+              <div className="p-4">
+                <button
+                  onClick={logout}
+                  className="flex items-center gap-3 w-full px-4 py-3 rounded-lg text-base font-semibold text-white/80 hover:bg-white/10 hover:text-white transition-colors"
+                >
+                  <LogOut className="w-5 h-5" />
+                  Cerrar sesión
+                </button>
+              </div>
+            </aside>
+
+            {/* Contenido blanco */}
+            <main className="flex-1 bg-white overflow-y-auto">
+              {children}
+            </main>
+          </div>
+
+          {/* Avión decorativo fuera del card, bottom-right */}
+          <div className="absolute bottom-4 right-8 w-44 pointer-events-none hidden md:block">
+            <Image src="/resources/avion.png" alt="" width={180} height={100} className="object-contain" />
+          </div>
+        </div>
+
+        <CallToActionBanner />
+        <Footer />
       </div>
     </AuthGuard>
   );

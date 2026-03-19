@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from app.api.api import api_router
 from app.core.config import settings
 from contextlib import asynccontextmanager
@@ -30,6 +31,10 @@ app.add_middleware(
 )
 
 app.include_router(api_router, prefix="/api/v1")
+
+IMAGES_DIR = os.path.join(os.path.dirname(__file__), "../../data/images")
+os.makedirs(IMAGES_DIR, exist_ok=True)
+app.mount("/uploads/images", StaticFiles(directory=IMAGES_DIR), name="images")
 
 @app.get("/")
 def read_root():

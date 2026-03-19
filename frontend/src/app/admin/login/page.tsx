@@ -3,11 +3,12 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/auth-provider";
-import { PlaneTakeoff, Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Loader2 } from "lucide-react";
+import Image from "next/image";
 import { fetchApi } from "@/lib/api";
+import { PublicHeader } from "@/app/(public)/PublicHeader";
+import { CallToActionBanner } from "@/components/home/CallToActionBanner";
+import { Footer } from "@/components/home/Footer";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -29,14 +30,12 @@ export default function LoginPage() {
 
       const response = await fetchApi("/auth/login", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: formData.toString(),
       });
 
-      login(response.access_token, response.rol);
-      router.push("/admin"); 
+      login(response.access_token, response.rol, response.nombre);
+      router.push("/admin");
     } catch (err: any) {
       setError(err.message || "Credenciales incorrectas");
     } finally {
@@ -45,71 +44,91 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen relative flex flex-col justify-center items-center py-12 sm:px-6 lg:px-8 font-sans">
-      {/* Background Image Blurred (Figma Spec) */}
-      <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=2073&auto=format&fit=crop')" }} />
-      <div className="absolute inset-0 bg-white/40 backdrop-blur-md z-0" />
-      
-      {/* Logo Floating */}
-      <div className="z-10 bg-white/90 p-3 rounded-full shadow-2xl mb-8 border border-white/40">
-        <div className="w-24 h-24 bg-white rounded-full flex flex-col items-center justify-center p-2 border-2 border-brand-primary">
-            <PlaneTakeoff className="w-10 h-10 text-brand-primary" />
-            <span className="text-[10px] font-bold text-center text-brand-primary leading-tight mt-1">Alexis EVT<br/>Legajo 12712</span>
-        </div>
+    <div className="flex flex-col min-h-screen">
+      {/* Header con video de fondo */}
+      <div className="relative h-[200px] md:h-[260px] bg-gray-900 overflow-hidden flex-shrink-0">
+        <video
+          src="/resources/hero.mp4"
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover opacity-70"
+        />
+        <div className="absolute inset-0 bg-black/30" />
+        <PublicHeader />
       </div>
 
-      <div className="sm:mx-auto sm:w-full sm:max-w-md z-10 w-[90%]">
-        <div className="bg-white/95 backdrop-blur-xl py-10 px-6 shadow-2xl sm:rounded-3xl sm:px-10 border border-white/50">
-          <h2 className="text-center text-4xl font-extrabold text-gray-900 mb-8 font-sans tracking-tight">
-            Iniciar sesión
-          </h2>
-          <form className="space-y-6" onSubmit={handleLogin}>
-            <div>
-              <div className="mt-1">
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Correo electrónico"
-                  className="bg-gray-100/50 border-gray-200 h-14 rounded-2xl px-5 text-lg placeholder:text-gray-400 focus:bg-white transition-colors"
-                />
-              </div>
-            </div>
+      {/* Sección del formulario */}
+      <main className="flex-1 relative flex flex-col items-center justify-center py-16 px-4">
+        {/* Video de fondo muy atenuado */}
+        <video
+          src="/resources/login-bg.mp4"
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-white/80" />
 
-            <div>
-               <div className="mt-1">
-                 <Input
-                   id="password"
-                   name="password"
-                   type="password"
-                   autoComplete="current-password"
-                   required
-                   value={password}
-                   onChange={(e) => setPassword(e.target.value)}
-                   placeholder="Contraseña"
-                   className="bg-gray-100/50 border-gray-200 h-14 rounded-2xl px-5 text-lg placeholder:text-gray-400 focus:bg-white transition-colors"
-                 />
-               </div>
-            </div>
+        {/* Contenido del formulario */}
+        <div className="relative z-10 w-full max-w-2xl flex flex-col items-center gap-8">
+          {/* Logo */}
+          <div className="w-40 h-40 rounded-full overflow-hidden border-4 border-white shadow-xl relative">
+            <Image
+              src="/resources/logo.png"
+              alt="Alexis EVT Logo"
+              fill
+              sizes="160px"
+              className="object-cover"
+            />
+          </div>
+
+          {/* Título */}
+          <h1 className="text-5xl font-black text-gray-900">Iniciar sesión</h1>
+
+          {/* Formulario */}
+          <form onSubmit={handleLogin} className="w-full flex flex-col gap-5">
+            <input
+              type="email"
+              placeholder="Correo electrónico"
+              required
+              autoComplete="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full h-14 px-5 text-lg rounded-lg border-2 border-[#1D5D8C]/40 bg-white/80 placeholder:text-[#1D5D8C]/60 text-gray-800 outline-none focus:border-[#1D5D8C] transition-colors"
+            />
+
+            <input
+              type="password"
+              placeholder="Contraseña"
+              required
+              autoComplete="current-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full h-14 px-5 text-lg rounded-lg border-2 border-[#1D5D8C]/40 bg-white/80 placeholder:text-[#1D5D8C]/60 text-gray-800 outline-none focus:border-[#1D5D8C] transition-colors"
+            />
 
             {error && (
-              <div className="text-sm text-red-600 bg-red-50 p-3 rounded-xl font-medium border border-red-100 text-center">
+              <p className="text-sm text-red-600 bg-red-50 px-4 py-3 rounded-lg border border-red-100 text-center font-medium">
                 {error}
-              </div>
+              </p>
             )}
 
-            <div>
-              <Button type="submit" className="w-full bg-brand-primary hover:bg-brand-primary/90 text-white rounded-2xl h-14 text-lg font-bold shadow-lg transition-transform hover:scale-[1.02]" disabled={loading}>
-                {loading ? <Loader2 className="w-6 h-6 mr-2 animate-spin" /> : "Ingresar"}
-              </Button>
-            </div>
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full h-14 bg-[#1D5D8C] hover:bg-[#164a70] text-white text-lg font-semibold rounded-lg transition-colors flex items-center justify-center disabled:opacity-70"
+            >
+              {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : "Ingresar"}
+            </button>
           </form>
         </div>
-      </div>
+      </main>
+
+      <CallToActionBanner />
+      <Footer />
     </div>
   );
 }

@@ -1,10 +1,14 @@
-from sqlalchemy import Column, Integer, String, Text, JSON
+from sqlalchemy import Column, Integer, String, Text, JSON, Boolean
 from app.db.session import Base
 
 class Destino(Base):
     __tablename__ = "destinos"
     id = Column(Integer, primary_key=True, index=True)
-    nombre = Column(String(255), unique=True, nullable=False)
+    nombre = Column(String(255), nullable=False)
+    sigla = Column(String(20), nullable=True)
+    descripcion = Column(Text, nullable=True)
+    es_combinado = Column(Boolean, default=False, nullable=False)
+    destino_ids = Column(JSON, nullable=True)  # IDs de destinos simples que lo componen
 
 class Categoria(Base):
     __tablename__ = "categorias"
@@ -17,6 +21,8 @@ class Hotel(Base):
     __tablename__ = "hoteles"
     id = Column(Integer, primary_key=True, index=True)
     nombre = Column(String(255), nullable=False)
+    telefono = Column(String(50), nullable=True)
+    destino_id = Column(Integer, nullable=True)
     direccion = Column(String(500), nullable=True)
     descripcion = Column(Text, nullable=True)
     imagenes = Column(JSON, nullable=True)  # lista de URLs de imágenes
@@ -25,6 +31,7 @@ class Transporte(Base):
     __tablename__ = "transportes"
     id = Column(Integer, primary_key=True, index=True)
     nombre = Column(String(255), nullable=False)  # nombre de la empresa
+    razon_social = Column(String(255), nullable=True)  # Ej: DINAMAR SERVICIOS TURISTICOS S.R.L.
     tipo = Column(String(100), nullable=True)  # "Bus Semicama", "Bus Cama", "Aéreo"
     horario_salida_desde = Column(String(10), nullable=True)  # "00:00"
     horario_salida_hasta = Column(String(10), nullable=True)  # "04:30"

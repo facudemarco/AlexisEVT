@@ -29,10 +29,23 @@ def seed_db():
     db = SessionLocal()
     try:
         # ── Categorías ────────────────────────────────────────────────────────
-        cat_mini, _ = get_or_create(db, Categoria, nombre="Miniturismo")
-        cat_arg, _  = get_or_create(db, Categoria, nombre="Argentina")
-        cat_bra, _  = get_or_create(db, Categoria, nombre="Brasil")
-        cat_int, _  = get_or_create(db, Categoria, nombre="Internacional")
+        # Patch slugs for existing rows that don't have them yet
+        _slug_map = {
+            "Miniturismo": "miniturismo",
+            "Argentina": "argentina",
+            "Brasil": "brasil",
+            "Internacional": "otros-internacionales",
+        }
+        for _nombre, _slug in _slug_map.items():
+            db.query(Categoria).filter(
+                Categoria.nombre == _nombre, Categoria.slug == None
+            ).update({"slug": _slug}, synchronize_session=False)
+        db.flush()
+
+        cat_mini, _ = get_or_create(db, Categoria, defaults={"slug": "miniturismo"}, nombre="Miniturismo")
+        cat_arg, _  = get_or_create(db, Categoria, defaults={"slug": "argentina"}, nombre="Argentina")
+        cat_bra, _  = get_or_create(db, Categoria, defaults={"slug": "brasil"}, nombre="Brasil")
+        cat_int, _  = get_or_create(db, Categoria, defaults={"slug": "otros-internacionales"}, nombre="Internacional")
         db.flush()
 
         # ── Destinos ──────────────────────────────────────────────────────────
@@ -82,7 +95,7 @@ def seed_db():
         ]
         puntos = []
         for nombre in puntos_nombres:
-            p, _ = get_or_create(db, PuntoAscenso, nombre=nombre)
+            p, _ = get_or_create(db, PuntoAscenso, nombre_lugar=nombre)
             puntos.append(p)
         db.flush()
 
@@ -93,6 +106,12 @@ def seed_db():
             admin.nombre = "Admin"
             admin.password_hash = get_password_hash("admin123")
             admin.rol = UserRole.ADMIN
+
+        facundo, created = get_or_create(db, User, email="facundo@alexisevt.com")
+        if created:
+            facundo.nombre = "Facundo"
+            facundo.password_hash = get_password_hash("facundo")
+            facundo.rol = UserRole.ADMIN
 
         db.flush()
 

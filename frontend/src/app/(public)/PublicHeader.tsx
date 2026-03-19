@@ -19,7 +19,7 @@ export function PublicHeader() {
       <div className="container mx-auto px-4 lg:px-12 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2">
           <div className="w-[120px] h-[120px] rounded-full flex flex-col items-center justify-center p-0 overflow-hidden shadow-xl border-[3px] border-brand-primary relative">
-             <Image src="/resources/logo.png" alt="Alexis EVT Logo" fill className="object-cover" />
+             <Image src="/resources/logo.png" alt="Alexis EVT Logo" fill sizes="120px" className="object-cover" />
           </div>
         </Link>
 

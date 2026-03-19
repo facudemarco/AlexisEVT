@@ -19,9 +19,11 @@ export function HeroSection() {
 
       {/* Top Right: Iniciar sesión (Sólo Desktop) */}
       <div className="hidden md:block absolute top-8 right-8 md:top-12 md:right-12 z-20">
-        <Button className="bg-brand-primary hover:bg-brand-primary/90 text-white font-bold py-2 px-4 rounded-md shadow-lg flex items-center gap-2">
-          Iniciar sesión <User className="w-4 h-4" />
-        </Button>
+        <Link href="/admin/login">
+          <Button className="bg-brand-primary hover:bg-brand-primary/90 text-white font-bold py-2 px-4 rounded-md shadow-lg flex items-center gap-2">
+            Iniciar sesión <User className="w-4 h-4" />
+          </Button>
+        </Link>
       </div>
 
       {/* Center/Left Content */}
@@ -41,6 +43,7 @@ export function HeroSection() {
             src="/resources/logo.png"
             alt="Alexis EVT Logo"
             fill
+            sizes="120px"
             priority
             className="object-cover scale-110 mix-blend-multiply"
           />
