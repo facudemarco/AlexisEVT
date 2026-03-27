@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from app.api.routers import auth, users, config, packages, bookings, uploads
+from app.api.routers import auth, users, config, packages, bookings, uploads, notifications, board
 
 api_router = APIRouter()
 
@@ -9,3 +9,5 @@ api_router.include_router(config.router, prefix="/config", tags=["Configuracione
 api_router.include_router(packages.router, prefix="/packages", tags=["Paquetes"])
 api_router.include_router(bookings.router, prefix="/bookings", tags=["Reservas"])
 api_router.include_router(uploads.router, prefix="/uploads", tags=["Uploads"])
+api_router.include_router(notifications.router, prefix="/notifications", tags=["Notificaciones"])
+api_router.include_router(board.router, prefix="/cartelera", tags=["Cartelera"])

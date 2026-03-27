@@ -12,6 +12,7 @@ class PasajeroBase(BaseModel):
     dni: Optional[str] = None
     fecha_nacimiento: Optional[date] = None
     telefono: Optional[str] = None
+    punto_ascenso_id: Optional[int] = None
 
 
 class PasajeroCreate(PasajeroBase):
@@ -47,7 +48,7 @@ class ReservaUpdate(BaseModel):
 
 class ReservaInDBBase(ReservaBase):
     id: int
-    vendedor_id: int
+    vendedor_id: Optional[int] = None
     estado_reserva: ReservaStatus
     motivo_rechazo: Optional[str] = None
     fecha_creacion: datetime

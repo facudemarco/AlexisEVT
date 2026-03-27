@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo } from "react";
 import { fetchApi } from "@/lib/api";
-import { Pencil, Trash2, Plus, ListFilter } from "lucide-react";
+import { Pencil, Trash2, Plus, ListFilter, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 
 interface Paquete {
   id: number;
@@ -35,6 +35,9 @@ export default function PackagesAdminPage() {
   const [filtroFechaDesde, setFiltroFechaDesde] = useState("");
   const [filtroFechaHasta, setFiltroFechaHasta] = useState("");
 
+  const [sortBy, setSortBy] = useState<"fecha_salida">("fecha_salida");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+
   const load = () => {
     setLoading(true);
     fetchApi("/packages/")
@@ -51,18 +54,34 @@ export default function PackagesAdminPage() {
   }, [paquetes]);
 
   const filtered = useMemo(() => {
-    return paquetes.filter((p) => {
+    let res = paquetes.filter((p) => {
       if (filtroDestino && p.destino?.nombre !== filtroDestino) return false;
       if (filtroFechaDesde && p.fecha_salida && p.fecha_salida < filtroFechaDesde) return false;
       if (filtroFechaHasta && p.fecha_salida && p.fecha_salida > filtroFechaHasta) return false;
       return true;
     });
-  }, [paquetes, filtroDestino, filtroFechaDesde, filtroFechaHasta]);
+
+    if (sortBy === "fecha_salida") {
+      res = [...res].sort((a, b) => {
+        const valA = a.fecha_salida || "";
+        const valB = b.fecha_salida || "";
+        if (valA < valB) return sortOrder === "asc" ? -1 : 1;
+        if (valA > valB) return sortOrder === "asc" ? 1 : -1;
+        return 0;
+      });
+    }
+
+    return res;
+  }, [paquetes, filtroDestino, filtroFechaDesde, filtroFechaHasta, sortBy, sortOrder]);
 
   const handleDelete = async (id: number) => {
     if (!confirm("¿Eliminar este paquete?")) return;
-    await fetchApi(`/packages/${id}`, { method: "DELETE" });
-    load();
+    try {
+      await fetchApi(`/packages/${id}`, { method: "DELETE" });
+      load();
+    } catch (e: any) {
+      alert(e.message || "No se puede eliminar el paquete. Verifique si tiene reservas asociadas.");
+    }
   };
 
   return (
@@ -130,7 +149,26 @@ export default function PackagesAdminPage() {
           <thead className="bg-[#1D5D8C] text-white">
             <tr>
               <th className="px-5 py-4 text-left font-bold text-base">Destino</th>
-              <th className="px-5 py-4 text-left font-bold text-base">Fecha de salida</th>
+              <th
+                className="px-5 py-4 text-left font-bold text-base cursor-pointer hover:bg-white/10 transition-colors"
+                onClick={() => {
+                  if (sortBy === "fecha_salida") {
+                    setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+                  } else {
+                    setSortBy("fecha_salida");
+                    setSortOrder("asc");
+                  }
+                }}
+              >
+                <div className="flex items-center gap-2">
+                  Fecha de salida
+                  {sortBy === "fecha_salida" ? (
+                    sortOrder === "asc" ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />
+                  ) : (
+                    <ArrowUpDown className="w-4 h-4 opacity-50" />
+                  )}
+                </div>
+              </th>
               <th className="px-5 py-4 text-left font-bold text-base">Noches</th>
               <th className="px-5 py-4 text-left font-bold text-base">Hotel</th>
               <th className="px-5 py-4 text-left font-bold text-base">Precio</th>

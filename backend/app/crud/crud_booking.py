@@ -66,6 +66,7 @@ def create_reserva(db: Session, reserva: ReservaCreate, vendedor_id: int, auto_a
             dni=p.dni,
             fecha_nacimiento=p.fecha_nacimiento,
             telefono=p.telefono,
+            punto_ascenso_id=p.punto_ascenso_id,
         )
         db.add(db_pasajero)
 

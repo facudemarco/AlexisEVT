@@ -28,7 +28,7 @@ interface Hotel {
   imagenes: string[];
 }
 
-type Tab = "hoteles" | "clientes" | "destinos" | "transporte" | "lugares";
+type Tab = "hoteles" | "clientes" | "usuarios" | "destinos" | "transporte" | "lugares";
 
 // ── Helpers UI ─────────────────────────────────────────────────────────────
 
@@ -314,8 +314,12 @@ function HotelesTab({ addTrigger }: { addTrigger: number }) {
 
   const handleDelete = async (id: number) => {
     if (!confirm("¿Eliminar este hotel?")) return;
-    await fetchApi(`/config/hoteles/${id}`, { method: "DELETE" });
-    load();
+    try {
+      await fetchApi(`/config/hoteles/${id}`, { method: "DELETE" });
+      load();
+    } catch (e: any) {
+      alert(e.message || "No se puede eliminar el hotel. Verifique si está asignado a algún paquete.");
+    }
   };
 
   const destinoNombre = (id?: number) =>
@@ -418,9 +422,9 @@ function HotelesTab({ addTrigger }: { addTrigger: number }) {
   );
 }
 
-// ── Modal Cliente ──────────────────────────────────────────────────────────
+// ── Modal Usuario (vendedor o admin) ──────────────────────────────────────
 
-interface ClienteFormState {
+interface UserFormState {
   nombre_sistema: string;
   nombre: string;
   email: string;
@@ -428,28 +432,30 @@ interface ClienteFormState {
   telefono: string;
 }
 
-const EMPTY_CLIENTE: ClienteFormState = {
+const EMPTY_USER: UserFormState = {
   nombre_sistema: "", nombre: "", email: "", password: "", telefono: "",
 };
 
-function ClienteModal({ cliente, onSave, onClose }: {
-  cliente: Cliente | null;
+function UserModal({ user, rolFixed, titleLabel, onSave, onClose }: {
+  user: Cliente | null;
+  rolFixed: "vendedor" | "admin";
+  titleLabel: string;
   onSave: () => void;
   onClose: () => void;
 }) {
-  const [form, setForm] = useState<ClienteFormState>(
-    cliente ? {
-      nombre_sistema: cliente.nombre_sistema ?? "",
-      nombre: cliente.nombre,
-      email: cliente.email,
+  const [form, setForm] = useState<UserFormState>(
+    user ? {
+      nombre_sistema: user.nombre_sistema ?? "",
+      nombre: user.nombre,
+      email: user.email,
       password: "",
-      telefono: cliente.telefono ?? "",
-    } : EMPTY_CLIENTE
+      telefono: user.telefono ?? "",
+    } : EMPTY_USER
   );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  const set = (key: keyof ClienteFormState, v: string) =>
+  const set = (key: keyof UserFormState, v: string) =>
     setForm((prev) => ({ ...prev, [key]: v }));
 
   const handleSave = async () => {
@@ -457,14 +463,14 @@ function ClienteModal({ cliente, onSave, onClose }: {
       setError("Nombre completo y correo son obligatorios.");
       return;
     }
-    if (!cliente && !form.password.trim()) {
-      setError("La contraseña es obligatoria para nuevos clientes.");
+    if (!user && !form.password.trim()) {
+      setError("La contraseña es obligatoria.");
       return;
     }
     setSaving(true);
     setError("");
     try {
-      if (cliente) {
+      if (user) {
         const body: Record<string, string> = {
           nombre_sistema: form.nombre_sistema,
           nombre: form.nombre,
@@ -472,7 +478,7 @@ function ClienteModal({ cliente, onSave, onClose }: {
           telefono: form.telefono,
         };
         if (form.password.trim()) body.password = form.password;
-        await fetchApi(`/users/${cliente.id}`, { method: "PUT", body: JSON.stringify(body) });
+        await fetchApi(`/users/${user.id}`, { method: "PUT", body: JSON.stringify(body) });
       } else {
         await fetchApi("/users/", {
           method: "POST",
@@ -482,39 +488,38 @@ function ClienteModal({ cliente, onSave, onClose }: {
             email: form.email,
             password: form.password,
             telefono: form.telefono,
-            rol: "vendedor",
+            rol: rolFixed,
           }),
         });
       }
       onSave();
-    } catch (e: any) {
-      setError(e.message || "Error al guardar.");
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Error al guardar.");
     } finally {
       setSaving(false);
     }
   };
 
+  const fields: { key: keyof UserFormState; label: string; placeholder: string; type?: string }[] = [
+    { key: "nombre_sistema", label: "Nombre del sistema", placeholder: rolFixed === "vendedor" ? "Ej: VEND VALENTIN DEMARCO" : "Ej: ADMIN ALEXIS" },
+    { key: "nombre", label: "Nombre completo", placeholder: "Ej: Claudia Patricia Paletta" },
+    { key: "email", label: "Correo electrónico", placeholder: "correo@ejemplo.com", type: "email" },
+    { key: "password", label: user ? "Nueva contraseña (dejar vacío para no cambiar)" : "Contraseña", placeholder: "••••••••", type: "password" },
+    { key: "telefono", label: "Teléfono", placeholder: "1126517405" },
+  ];
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
-
         <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
-          <h2 className="text-2xl font-black text-gray-900">
-            {cliente ? "Editar cliente" : "Agregar Cliente"}
-          </h2>
+          <h2 className="text-2xl font-black text-gray-900">{titleLabel}</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
 
         <div className="px-6 py-5 space-y-4">
-          {[
-            { key: "nombre_sistema" as const, label: "Nombre del sistema", placeholder: "Ej: VEND VALENTIN DEMARCO" },
-            { key: "nombre" as const, label: "Nombre completo", placeholder: "Ej: Demarco Valentin" },
-            { key: "email" as const, label: "Correo electrónico", placeholder: "correo@ejemplo.com", type: "email" },
-            { key: "password" as const, label: cliente ? "Nueva contraseña (dejar vacío para no cambiar)" : "Contraseña", placeholder: "••••••••", type: "password" },
-            { key: "telefono" as const, label: "Teléfono", placeholder: "1126517405" },
-          ].map(({ key, label, placeholder, type = "text" }) => (
+          {fields.map(({ key, label, placeholder, type = "text" }) => (
             <div key={key}>
               <Label>{label}</Label>
               <input
@@ -526,19 +531,18 @@ function ClienteModal({ cliente, onSave, onClose }: {
               />
             </div>
           ))}
-
-          {error && (
-            <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-xl px-4 py-3 font-medium">
-              {error}
+          {rolFixed === "admin" && !user && (
+            <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 font-medium">
+              Este usuario tendrá acceso completo de administrador al sistema.
             </p>
+          )}
+          {error && (
+            <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-xl px-4 py-3 font-medium">{error}</p>
           )}
         </div>
 
         <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-100">
-          <button
-            onClick={onClose}
-            className="px-5 py-2.5 rounded-xl border-2 border-gray-200 text-gray-600 font-bold text-sm hover:border-gray-300 transition-colors"
-          >
+          <button onClick={onClose} className="px-5 py-2.5 rounded-xl border-2 border-gray-200 text-gray-600 font-bold text-sm hover:border-gray-300 transition-colors">
             Cancelar
           </button>
           <button
@@ -547,13 +551,18 @@ function ClienteModal({ cliente, onSave, onClose }: {
             className="px-5 py-2.5 rounded-xl bg-[#1D5D8C] text-white font-bold text-sm hover:bg-[#164a70] transition-colors disabled:opacity-60 flex items-center gap-2"
           >
             {saving && <Loader2 className="w-4 h-4 animate-spin" />}
-            {cliente ? "Guardar cambios" : "Agregar"}
+            {user ? "Guardar cambios" : "Agregar"}
           </button>
         </div>
       </div>
     </div>
   );
 }
+
+// Alias para mantener compatibilidad con el nombre anterior
+const ClienteModal = ({ cliente, onSave, onClose }: { cliente: Cliente | null; onSave: () => void; onClose: () => void }) => (
+  <UserModal user={cliente} rolFixed="vendedor" titleLabel={cliente ? "Editar vendedor" : "Agregar Vendedor"} onSave={onSave} onClose={onClose} />
+);
 
 // ── Tab Clientes ───────────────────────────────────────────────────────────
 
@@ -579,8 +588,12 @@ function ClientesTab({ addTrigger }: { addTrigger: number }) {
 
   const handleDelete = async (id: number) => {
     if (!confirm("¿Eliminar este cliente?")) return;
-    await fetchApi(`/users/${id}`, { method: "DELETE" });
-    load();
+    try {
+      await fetchApi(`/users/${id}`, { method: "DELETE" });
+      load();
+    } catch (e: any) {
+      alert(e.message || "No se puede eliminar el cliente. Verifique si tiene reservas asociadas.");
+    }
   };
 
   return (
@@ -870,8 +883,12 @@ function DestinosTab({ addTrigger }: { addTrigger: number }) {
 
   const handleDelete = async (id: number) => {
     if (!confirm("¿Eliminar este destino?")) return;
-    await fetchApi(`/config/destinos/${id}`, { method: "DELETE" });
-    load();
+    try {
+      await fetchApi(`/config/destinos/${id}`, { method: "DELETE" });
+      load();
+    } catch (e: any) {
+      alert(e.message || "No se puede eliminar el destino. Verifique si está asignado a algún paquete.");
+    }
   };
 
   const destinosSimples = destinos.filter((d) => !d.es_combinado);
@@ -1049,8 +1066,12 @@ function TransporteTab({ addTrigger }: { addTrigger: number }) {
 
   const handleDelete = async (id: number) => {
     if (!confirm("¿Eliminar esta empresa de transporte?")) return;
-    await fetchApi(`/config/transportes/${id}`, { method: "DELETE" });
-    load();
+    try {
+      await fetchApi(`/config/transportes/${id}`, { method: "DELETE" });
+      load();
+    } catch (e: any) {
+      alert(e.message || "No se puede eliminar la empresa. Verifique si está asignada a algún paquete.");
+    }
   };
 
   return (
@@ -1210,8 +1231,12 @@ function LugaresCargaTab({ addTrigger }: { addTrigger: number }) {
 
   const handleDelete = async (id: number) => {
     if (!confirm("¿Eliminar este lugar de carga?")) return;
-    await fetchApi(`/config/puntos_ascenso/${id}`, { method: "DELETE" });
-    load();
+    try {
+      await fetchApi(`/config/puntos_ascenso/${id}`, { method: "DELETE" });
+      load();
+    } catch (e: any) {
+      alert(e.message || "No se puede eliminar el lugar de carga. Verifique si está asignado a algún paquete.");
+    }
   };
 
   // Truncar descripción larga en tabla
@@ -1285,6 +1310,7 @@ const ADD_LABELS: Record<Tab, string> = {
   destinos: "Agregar Destino",
   transporte: "Agregar Empresa de transporte",
   lugares: "Agregar Lugar de carga",
+  usuarios: "Agregar Usuario",
 };
 
 export default function ConfigAdminPage() {

@@ -35,7 +35,7 @@ export default function LoginPage() {
       });
 
       login(response.access_token, response.rol, response.nombre);
-      router.push("/admin");
+      window.location.href = response.rol === "admin" ? "/admin" : "/";
     } catch (err: any) {
       setError(err.message || "Credenciales incorrectas");
     } finally {

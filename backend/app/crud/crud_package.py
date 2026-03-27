@@ -5,7 +5,19 @@ from app.schemas.package import PaqueteCreate, PaqueteUpdate
 
 
 def get_paquete(db: Session, paquete_id: int):
-    return db.query(Paquete).filter(Paquete.id == paquete_id).first()
+    return (
+        db.query(Paquete)
+        .options(
+            joinedload(Paquete.destino),
+            joinedload(Paquete.categoria),
+            joinedload(Paquete.hotel_detalles).joinedload(PaqueteHotel.hotel),
+            joinedload(Paquete.transportes),
+            joinedload(Paquete.servicios),
+            joinedload(Paquete.puntos_ascenso),
+        )
+        .filter(Paquete.id == paquete_id)
+        .first()
+    )
 
 
 def get_paquetes(db: Session, skip: int = 0, limit: int = 100):

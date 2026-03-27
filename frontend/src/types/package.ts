@@ -32,7 +32,7 @@ export interface Servicio {
 
 export interface PuntoAscenso {
   id: number;
-  nombre: string;
+  nombre_lugar: string;
 }
 
 export interface PaqueteHotelDetalle {

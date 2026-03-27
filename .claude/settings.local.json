@@ -13,7 +13,16 @@
       "Bash(curl -sv http://localhost:8000/api/v1/packages/)",
       "Bash(python -m py_compile app/core/config.py)",
       "Bash(ls \"C:/Users/facun/OneDrive/Documentos/iweb/AlexisEVT/frontend/src/app/\\(admin\\)/admin/config/\")",
-      "Bash(python -m alembic upgrade head)"
+      "Bash(python -m alembic upgrade head)",
+      "Bash(source venv/Scripts/activate)",
+      "Bash(python seed_bookings.py)",
+      "Bash(pip show:*)",
+      "Bash(pip install:*)",
+      "Bash(python -c \"import reportlab; print\\(''reportlab OK'', reportlab.Version\\)\")"
     ]
-  }
+  },
+  "enabledMcpjsonServers": [
+    "claude-flow"
+  ],
+  "enableAllProjectMcpServers": true
 }

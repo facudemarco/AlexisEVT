@@ -20,6 +20,7 @@ class Pasajero(Base):
     dni = Column(String(20), nullable=True)
     fecha_nacimiento = Column(Date, nullable=True)
     telefono = Column(String(50), nullable=True)
+    punto_ascenso_id = Column(Integer, ForeignKey("puntos_ascenso.id"), nullable=True)
 
     reserva = relationship("Reserva", back_populates="pasajeros")
 

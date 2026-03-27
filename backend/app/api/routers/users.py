@@ -1,6 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 from app.api.deps import get_db
 from app.api.deps_security import get_current_admin_user
 from app.schemas.user import User, UserCreate, UserUpdate
@@ -17,9 +17,14 @@ def create_vendedor(user_in: UserCreate, db: Session = Depends(get_db), current_
     return crud_user.create_user(db=db, user=user_in)
 
 @router.get("/", response_model=List[User])
-def read_vendedores(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), current_admin = Depends(get_current_admin_user)):
-    """Solo el Admin puede listar todos los vendedores."""
-    return crud_user.get_users(db, skip=skip, limit=limit)
+def read_users(
+    skip: int = 0,
+    limit: int = 100,
+    rol: Optional[str] = Query(None),
+    db: Session = Depends(get_db),
+    current_admin = Depends(get_current_admin_user),
+):
+    return crud_user.get_users(db, skip=skip, limit=limit, rol=rol)
 
 
 @router.put("/{user_id}", response_model=User)

@@ -10,6 +10,7 @@ import { CallToActionBanner } from "@/components/home/CallToActionBanner";
 import { Footer } from "@/components/home/Footer";
 import { Package, Settings, BookOpen, Newspaper, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { NotificationBell } from "@/components/admin/NotificationBell";
 
 const navItems = [
   { href: "/admin/packages",  label: "Paquetes",   icon: Package },
@@ -37,15 +38,18 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <PublicHeader />
           {/* Nombre + rol bottom-right */}
           {nombre && (
-            <div className="absolute bottom-4 right-6 md:right-12 z-20 text-white font-semibold text-sm drop-shadow">
-              {nombre} — {role === "admin" ? "Admin" : "Vendedor/a"}
+            <div className="absolute bottom-4 right-6 md:right-12 z-20 flex items-center gap-3">
+              <NotificationBell />
+              <span className="text-white font-semibold text-sm drop-shadow">
+                {nombre} — {role === "admin" ? "Admin" : "Vendedor/a"}
+              </span>
             </div>
           )}
         </div>
 
         {/* Layout principal: card centrada sobre fondo celeste */}
-        <div className="flex-1 bg-[#B8D9EA] flex items-start justify-center py-10 px-4 relative">
-          <div className="w-full max-w-5xl flex rounded-2xl overflow-hidden shadow-xl min-h-[520px]">
+        <div className="flex-1 bg-[#B8D9EA] flex items-start justify-center py-10 px-4 md:px-8 relative">
+          <div className="w-full max-w-[1440px] flex rounded-2xl overflow-hidden shadow-xl min-h-[520px]">
 
             {/* Sidebar azul */}
             <aside className="w-52 bg-[#1D5D8C] flex flex-col flex-shrink-0">
@@ -93,10 +97,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </main>
           </div>
 
-          {/* Avión decorativo fuera del card, bottom-right */}
-          <div className="absolute bottom-4 right-8 w-44 pointer-events-none hidden md:block">
-            <Image src="/resources/avion.png" alt="" width={180} height={100} className="object-contain" />
-          </div>
         </div>
 
         <CallToActionBanner />

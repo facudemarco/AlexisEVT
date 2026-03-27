@@ -17,7 +17,8 @@ export async function fetchApi(endpoint: string, options: RequestInit = {}) {
   });
 
   if (!response.ok) {
-    if (response.status === 401) {
+    const isLoginEndpoint = endpoint.includes("/auth/login");
+    if (response.status === 401 && !isLoginEndpoint) {
       Cookies.remove("access_token");
       Cookies.remove("user_role");
       if (typeof window !== "undefined") {
