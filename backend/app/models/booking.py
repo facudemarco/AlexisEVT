@@ -40,7 +40,10 @@ class Reserva(Base):
     pasajeros_adultos = Column(Integer, default=1)
     pasajeros_menores = Column(Integer, default=0)
 
-    estado_reserva = Column(Enum(ReservaStatus), default=ReservaStatus.PENDIENTE)
+    estado_reserva = Column(
+        Enum(ReservaStatus, values_callable=lambda obj: [e.value for e in obj]),
+        default=ReservaStatus.PENDIENTE,
+    )
     motivo_rechazo = Column(Text, nullable=True)
     precio_total = Column(Float, nullable=False)
 

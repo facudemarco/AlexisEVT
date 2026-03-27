@@ -113,6 +113,12 @@ def seed_db():
             facundo.password_hash = get_password_hash("facundo")
             facundo.rol = UserRole.ADMIN
 
+        facundod, created = get_or_create(db, User, email="facundod@iwebtecnology.com")
+        if created:
+            facundod.nombre = "Facundo Demarco"
+            facundod.password_hash = get_password_hash("facundo")
+            facundod.rol = UserRole.ADMIN
+
         db.flush()
 
         # ── Paquetes de ejemplo ───────────────────────────────────────────────

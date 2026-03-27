@@ -21,7 +21,7 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from app.core.config import settings
 from app.models import Base  # noqa: F401 – importa todos los modelos para que Alembic los detecte
 
-config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
+config.set_main_option("sqlalchemy.url", settings.db_url)
 target_metadata = Base.metadata
 
 # other values from the config, defined by the needs of env.py,

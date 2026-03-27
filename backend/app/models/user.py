@@ -15,6 +15,10 @@ class User(Base):
     email = Column(String(255), unique=True, index=True, nullable=False)
     password_hash = Column(String(255), nullable=False)
     telefono = Column(String(50), nullable=True)
-    rol = Column(Enum(UserRole), default=UserRole.VENDEDOR, nullable=False)
+    rol = Column(
+        Enum(UserRole, values_callable=lambda obj: [e.value for e in obj]),
+        default=UserRole.VENDEDOR,
+        nullable=False,
+    )
     agencia_nombre = Column(String(255), nullable=True)
     comision_porcentaje = Column(Float, default=0.0)
