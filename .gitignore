@@ -18,6 +18,25 @@ env/
 # Testing - Excluido por petición
 /system_tests/
 
-# Base de Datos Hardcodeada Local
+# Base de Datos
 *.db
 *.sqlite3
+
+# Imágenes subidas por usuarios (datos, no código)
+data/images/
+backend/data/images/
+
+# Archivos de backup generados por herramientas
+*.bak
+
+# Estado de runtime de Claude Flow (generado automáticamente)
+.claude-flow/
+
+# Configuración local de Claude Code (específica de cada dev)
+.claude/settings.local.json
+
+# Archivos temporales y de desarrollo
+_tmp_*.py
+_tmp_*.js
+output.txt
+_error.log

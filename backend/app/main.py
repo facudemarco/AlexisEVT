@@ -1,8 +1,11 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 from app.api.api import api_router
 from app.core.config import settings
+from app.core.limiter import limiter
 from contextlib import asynccontextmanager
 import sys
 import os
@@ -20,6 +23,10 @@ async def lifespan(app: FastAPI):
     # Al apagar
 
 app = FastAPI(title=settings.PROJECT_NAME, lifespan=lifespan)
+
+# Rate limiting — el handler convierte RateLimitExceeded → HTTP 429
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # CORS configuration
 app.add_middleware(

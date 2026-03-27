@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from datetime import timedelta
@@ -6,6 +6,7 @@ from typing import Optional
 from pydantic import BaseModel, EmailStr
 from app.api.deps import get_db
 from app.api.deps_security import get_current_user
+from app.core.limiter import limiter
 from app.core.security import verify_password, create_access_token, get_password_hash
 from app.core.config import settings
 from app.crud.crud_user import get_user_by_email
@@ -13,8 +14,18 @@ from app.schemas.user import User
 
 router = APIRouter()
 
+
 @router.post("/login")
-def login_for_access_token(db: Session = Depends(get_db), form_data: OAuth2PasswordRequestForm = Depends()):
+@limiter.limit("10/minute")
+def login_for_access_token(
+    request: Request,
+    db: Session = Depends(get_db),
+    form_data: OAuth2PasswordRequestForm = Depends(),
+):
+    """
+    10 intentos por minuto por IP.
+    Superar el límite devuelve HTTP 429 con Retry-After header.
+    """
     user = get_user_by_email(db, email=form_data.username)
     if not user or not verify_password(form_data.password, user.password_hash):
         raise HTTPException(

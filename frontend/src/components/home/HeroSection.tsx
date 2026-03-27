@@ -11,9 +11,22 @@ export function HeroSection() {
 
   return (
     <section className="relative h-[650px] flex items-center bg-gray-900 overflow-hidden px-8 md:px-24">
+      {/*
+        preload="metadata": descarga solo los metadatos del video (duración, dimensiones),
+        no el contenido. El browser inicia el autoplay sin bloquear el FCP.
+        poster: muestra la imagen hasta que el primer frame del video está listo,
+        evitando la pantalla negra en mobile e inicio lento.
+        aria-hidden: el video es puramente decorativo.
+      */}
       <video
         src="/resources/hero.mp4"
-        autoPlay loop muted playsInline
+        poster="/resources/hero_cartelera.png"
+        autoPlay
+        loop
+        muted
+        playsInline
+        preload="metadata"
+        aria-hidden="true"
         className="absolute inset-0 w-full h-full object-cover opacity-70"
       />
       <div className="absolute inset-0 bg-black/30 z-10" />
