@@ -21,7 +21,20 @@ def get_paquete(db: Session, paquete_id: int):
 
 
 def get_paquetes(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(Paquete).filter(Paquete.estado == True, Paquete.es_borrador == False).offset(skip).limit(limit).all()
+    return (
+        db.query(Paquete)
+        .options(
+            joinedload(Paquete.destino),
+            joinedload(Paquete.categoria),
+            joinedload(Paquete.hotel_detalles).joinedload(PaqueteHotel.hotel),
+            joinedload(Paquete.transportes),
+            joinedload(Paquete.puntos_ascenso),
+        )
+        .filter(Paquete.estado == True, Paquete.es_borrador == False)
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
 
 
 def get_paquetes_by_category_slug(db: Session, slug: str):

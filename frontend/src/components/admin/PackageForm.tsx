@@ -209,18 +209,9 @@ export function PackageForm({ initialData, packageId }: Props) {
     try {
       const fd = new FormData();
       fd.append("file", file);
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/uploads/image`,
-        { method: "POST", body: fd }
-      );
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.detail || "Error al subir la imagen");
-      }
-      const data = await res.json();
-      // data.url = "/uploads/images/xxx.jpg" → construimos la URL completa del backend
-      const base = (process.env.NEXT_PUBLIC_API_URL ?? "").replace("/api/v1", "");
-      set("imagen_url", `${base}${data.url}`);
+      // fetchApi adjunta el Bearer token automáticamente y maneja FormData sin Content-Type
+      const data = await fetchApi("/uploads/image", { method: "POST", body: fd });
+      set("imagen_url", data.url);
     } catch (e: any) {
       setError(e.message || "Error al subir la imagen.");
     } finally {

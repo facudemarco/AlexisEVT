@@ -72,6 +72,26 @@ export function PackageSidebar({ paquete }: Props) {
         setExpanded(i);
         return;
       }
+      if (!p.dni.trim()) {
+        setError(`Ingresá el DNI del pasajero ${i + 1}.`);
+        setExpanded(i);
+        return;
+      }
+      if (!p.fecha_nacimiento) {
+        setError(`Ingresá la fecha de nacimiento del pasajero ${i + 1}.`);
+        setExpanded(i);
+        return;
+      }
+      if (!p.telefono.trim()) {
+        setError(`Ingresá el teléfono del pasajero ${i + 1}.`);
+        setExpanded(i);
+        return;
+      }
+      if (puntosAscenso.length > 0 && !p.punto_ascenso_id) {
+        setError(`Seleccioná el lugar de ascenso del pasajero ${i + 1}.`);
+        setExpanded(i);
+        return;
+      }
     }
     setError("");
     setSaving(true);
@@ -206,15 +226,17 @@ export function PackageSidebar({ paquete }: Props) {
                   </div>
                   <input
                     type="text"
-                    placeholder="DNI"
+                    placeholder="DNI *"
+                    required
                     value={pax.dni}
                     onChange={(e) => updatePax(idx, "dni", e.target.value)}
                     className="px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-[#1D5D8C]"
                   />
                   <div className="flex flex-col gap-1">
-                    <label className="text-xs text-gray-500 font-medium">Fecha de nacimiento</label>
+                    <label className="text-xs text-gray-500 font-medium">Fecha de nacimiento *</label>
                     <input
                       type="date"
+                      required
                       value={pax.fecha_nacimiento}
                       onChange={(e) => updatePax(idx, "fecha_nacimiento", e.target.value)}
                       className="px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-[#1D5D8C] text-gray-700"
@@ -222,18 +244,20 @@ export function PackageSidebar({ paquete }: Props) {
                   </div>
                   <input
                     type="tel"
-                    placeholder="Teléfono"
+                    placeholder="Teléfono *"
+                    required
                     value={pax.telefono}
                     onChange={(e) => updatePax(idx, "telefono", e.target.value)}
                     className="px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-[#1D5D8C]"
                   />
                   {puntosAscenso.length > 0 && (
                     <select
+                      required
                       value={pax.punto_ascenso_id}
                       onChange={(e) => updatePax(idx, "punto_ascenso_id", e.target.value)}
                       className="px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-[#1D5D8C] text-gray-700 bg-white"
                     >
-                      <option value="">Lugar de ascenso (opcional)</option>
+                      <option value="">Lugar de ascenso *</option>
                       {puntosAscenso.map((p) => (
                         <option key={p.id} value={p.id}>{p.nombre_lugar}</option>
                       ))}

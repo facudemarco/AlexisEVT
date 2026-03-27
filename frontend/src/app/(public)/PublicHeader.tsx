@@ -31,12 +31,14 @@ export function PublicHeader() {
         </nav>
 
         <div className="flex items-center">
-          {isAuthenticated && role === "vendedor" ? (
-            <Link href="/mi-cuenta">
-              <Button className="bg-brand-primary hover:bg-brand-primary/90 text-white rounded-xl px-6 py-5 hidden md:flex text-md shadow-md gap-2">
-                <UserCircle className="w-5 h-5" /> Mi cuenta
-              </Button>
-            </Link>
+          {isAuthenticated ? (
+            role === "vendedor" ? (
+              <Link href="/mi-cuenta">
+                <Button className="bg-brand-primary hover:bg-brand-primary/90 text-white rounded-xl px-6 py-5 hidden md:flex text-md shadow-md gap-2">
+                  <UserCircle className="w-5 h-5" /> Mi cuenta
+                </Button>
+              </Link>
+            ) : null
           ) : (
             <Link href="/admin/login">
               <Button className="bg-brand-primary hover:bg-brand-primary/90 text-white rounded-xl px-6 py-5 hidden md:flex text-md shadow-md">
