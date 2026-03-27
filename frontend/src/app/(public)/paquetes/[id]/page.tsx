@@ -271,7 +271,7 @@ export default async function PackageDetailPage({
                     </p>
                     <ul className="ml-6 space-y-1 list-disc">
                       {paquete.puntos_ascenso.map((p) => (
-                        <li key={p.id}>{p.nombre}</li>
+                        <li key={p.id}>{p.nombre_lugar}</li>
                       ))}
                     </ul>
                   </div>
