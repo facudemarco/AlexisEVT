@@ -50,7 +50,12 @@ class Settings(BaseSettings):
 
     # ── Imágenes (ADR-001) ───────────────────────────────────────────────────
     IMAGES_BASE_URL: str = "http://localhost:8000/uploads/images"
-    UPLOAD_DIR: str = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "data", "images")
+    # config.py está en backend/app/core/ → subir 4 niveles llega a la raíz del proyecto
+    # Esto alinea con el StaticFiles de main.py y con el alias de nginx /media/images/ → data/images/
+    UPLOAD_DIR: str = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))),
+        "data", "images"
+    )
     SERVE_STATIC_LOCALLY: bool = True
 
     # ── SMTP ─────────────────────────────────────────────────────────────────
