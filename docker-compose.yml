@@ -1,33 +1,26 @@
 services:
   backend:
-    build:
+    build: 
       context: ./backend
-      dockerfile: Dockerfile
+    container_name: alexisevt_backend
     restart: always
+    env_file:
+      - ./backend/.env
     ports:
-      - "8000:8000"
-    environment:
-      # Usando Base de Datos local SQLite para rápido desarrollo y mockups
-      DATABASE_URL: sqlite:////app/local_dev.db
-      SECRET_KEY: ${JWT_SECRET:-MdpuF8KsXiRArNlHtl6pXO2XyLSJMTQ8_Alexis}
+      # El VPS expone el 8011, el contenedor escucha en el 8000
+      - "127.0.0.1:8011:8000"
     volumes:
-      - ./backend:/app
-    
+      - /home/iweb/alexisevt/data/images:/app/data/images
+
   frontend:
-    build:
+    build: 
       context: ./frontend
-      dockerfile: Dockerfile
+    container_name: alexisevt_frontend
     restart: always
+    env_file:
+      - ./frontend/.env
     ports:
-      - "3000:3000"
-    environment:
-      NEXT_PUBLIC_API_URL: http://localhost:8000/api/v1
+      # El VPS expone el 3011, el contenedor escucha en el 3000
+      - "127.0.0.1:3011:3000"
     depends_on:
       - backend
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-      - /app/.next
-
-volumes:
-  db_data:
