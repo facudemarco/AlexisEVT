@@ -12,24 +12,24 @@ export function HeroSection() {
   return (
     <section className="relative h-[650px] flex items-center bg-gray-900 overflow-hidden px-8 md:px-24">
       {/*
-        preload="metadata": descarga solo los metadatos del video (duración, dimensiones),
-        no el contenido. El browser inicia el autoplay sin bloquear el FCP.
+        preload="auto": instruye explícitamente al navegador para descargar el video,
+        mejorando el rendimiento de autoplay en Windows.
+        Usamos <source> para mayor compatibilidad de formatos.
         poster: muestra la imagen hasta que el primer frame del video está listo,
         evitando la pantalla negra en mobile e inicio lento.
-        aria-hidden: el video es puramente decorativo.
       */}
       <video
-        src="/resources/hero.mp4"
-        poster="/resources/hero_cartelera.png"
         autoPlay
         loop
         muted
         playsInline
-        preload="metadata"
-        aria-hidden="true"
+        preload="auto"
+        poster="/resources/hero_cartelera.png"
         className="absolute inset-0 w-full h-full object-cover opacity-70 [will-change:transform] [transform:translateZ(0)]"
-        style={{ maxWidth: "100%", maxHeight: "100%" }}
-      />
+        aria-hidden="true"
+      >
+        <source src="/resources/hero.mp4" type="video/mp4" />
+      </video>
       <div className="absolute inset-0 bg-black/30 z-10" />
 
       {/* Top Right: login / mi cuenta / panel */}
@@ -62,7 +62,7 @@ export function HeroSection() {
         </h1>
         <Button
           className="bg-brand-primary hover:bg-brand-primary/90 text-white font-bold py-6 px-8 rounded-lg text-lg mt-2 shadow-lg w-fit"
-          onClick={() => document.getElementById("proxima-aventura")?.scrollIntoView({ behavior: "smooth" })}
+          onClick={() => document.getElementById("periodos")?.scrollIntoView({ behavior: "smooth" })}
         >
           Ver opciones
         </Button>

@@ -67,7 +67,7 @@ export default async function PackageDetailPage({
   if (!paquete) notFound();
 
   const fechaSalida = formatFechaSalida(paquete);
-  const primerHotel = paquete.hotel_detalles?.[0];
+  const hotelesDetalle = paquete.hotel_detalles?.filter((d) => d.hotel) ?? [];
   const primerTransporte = paquete.transportes?.[0];
 
   return (
@@ -202,58 +202,71 @@ export default async function PackageDetailPage({
                 </ServiceBlock>
               )}
 
-              {/* Alojamiento */}
-              {primerHotel && primerHotel.hotel && (
+              {/* Alojamiento — un bloque por hotel */}
+              {hotelesDetalle.length > 0 && (
                 <ServiceBlock
                   icon={<BedDouble className="w-4 h-4" />}
                   title="Alojamiento"
-                  right={
-                    primerHotel.cantidad_noches
-                      ? `${primerHotel.cantidad_noches} noche${primerHotel.cantidad_noches !== 1 ? "s" : ""}`
-                      : undefined
-                  }
                 >
-                  {/* Galería de imágenes del hotel */}
-                  {primerHotel.hotel.imagenes && primerHotel.hotel.imagenes.length > 0 && (
-                    <div className="grid grid-cols-3 gap-2 mb-4">
-                      {primerHotel.hotel.imagenes.map((url, i) => (
-                        <div
-                          key={i}
-                          className={`relative rounded-xl overflow-hidden ${i === 0 ? "row-span-2 col-span-1 h-48" : "h-[88px]"}`}
-                        >
-                          <Image
-                            src={url}
-                            alt={`${primerHotel.hotel!.nombre} - foto ${i + 1}`}
-                            fill
-                            className="object-cover"
-                          />
+                  <div className="space-y-6">
+                    {hotelesDetalle.map((det, idx) => (
+                      <div key={idx} className={idx > 0 ? "pt-5 border-t border-gray-100" : ""}>
+                        {/* Galería */}
+                        {det.hotel!.imagenes && det.hotel!.imagenes.length > 0 && (
+                          <div className="grid grid-cols-3 gap-2 mb-4">
+                            {det.hotel!.imagenes.map((url, i) => (
+                              <div
+                                key={i}
+                                className={`relative rounded-xl overflow-hidden ${i === 0 ? "row-span-2 col-span-1 h-48" : "h-[88px]"}`}
+                              >
+                                <Image
+                                  src={url}
+                                  alt={`${det.hotel!.nombre} - foto ${i + 1}`}
+                                  fill
+                                  className="object-cover"
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        <div className="flex items-start justify-between gap-4 mb-2">
+                          <h4 className="font-bold text-gray-900">{det.hotel!.nombre}</h4>
+                          {det.precio != null && det.precio > 0 && (
+                            <span className="text-base font-black text-[#1D5D8C] flex-shrink-0">
+                              {paquete.moneda === "USD" ? "U$D " : "$ "}
+                              {Number(det.precio).toLocaleString("es-AR")}
+                              <span className="text-xs font-semibold text-gray-500 ml-1">/ persona</span>
+                            </span>
+                          )}
                         </div>
-                      ))}
-                    </div>
-                  )}
 
-                  <h4 className="font-bold text-gray-900 mb-3">{primerHotel.hotel.nombre}</h4>
-
-                  <div className="space-y-2 text-sm text-gray-700 border border-gray-100 rounded-xl p-3">
-                    {primerHotel.hotel.direccion && (
-                      <p className="flex items-start gap-2">
-                        <MapPin className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" />
-                        Dirección: <strong>{primerHotel.hotel.direccion}</strong>
-                      </p>
-                    )}
-                    {primerHotel.regimen && (
-                      <p className="flex items-center gap-2">
-                        🍽️ Régimen: <strong>{primerHotel.regimen}</strong>
-                      </p>
-                    )}
-                    {primerHotel.hotel.descripcion && (
-                      <div>
-                        <p className="flex items-center gap-2 mb-1">
-                          📄 Descripción del hotel:
-                        </p>
-                        <p className="text-gray-600 ml-6">{primerHotel.hotel.descripcion}</p>
+                        <div className="space-y-2 text-sm text-gray-700 border border-gray-100 rounded-xl p-3">
+                          {det.hotel!.direccion && (
+                            <p className="flex items-start gap-2">
+                              <MapPin className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" />
+                              Dirección: <strong>{det.hotel!.direccion}</strong>
+                            </p>
+                          )}
+                          {det.regimen && (
+                            <p className="flex items-center gap-2">
+                              🍽️ Régimen: <strong>{det.regimen}</strong>
+                            </p>
+                          )}
+                          {det.cantidad_noches && (
+                            <p className="flex items-center gap-2">
+                              🌙 Noches: <strong>{det.cantidad_noches}</strong>
+                            </p>
+                          )}
+                          {det.hotel!.descripcion && (
+                            <div>
+                              <p className="flex items-center gap-2 mb-1">📄 Descripción del hotel:</p>
+                              <p className="text-gray-600 ml-6">{det.hotel!.descripcion}</p>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    )}
+                    ))}
                   </div>
                 </ServiceBlock>
               )}

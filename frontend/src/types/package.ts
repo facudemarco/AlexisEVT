@@ -40,6 +40,7 @@ export interface PaqueteHotelDetalle {
   hotel?: Hotel;
   regimen?: string;
   cantidad_noches?: number;
+  precio?: number;
 }
 
 export interface Paquete {

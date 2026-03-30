@@ -162,7 +162,7 @@ export default function UsersManagement() {
           <table className="min-w-full text-sm">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
-                {["Nombre", "Email", "Rol", "Agencia", "Comisión %", "Teléfono", ""].map((h) => (
+                {["Nombre", "Email", "Rol", "Teléfono", ""].map((h) => (
                   <th key={h} className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">{h}</th>
                 ))}
               </tr>
@@ -176,8 +176,6 @@ export default function UsersManagement() {
                   </td>
                   <td className="px-4 py-3 text-gray-600">{u.email}</td>
                   <td className="px-4 py-3">{rolBadge(u.rol)}</td>
-                  <td className="px-4 py-3 text-gray-600">{u.agencia_nombre || "—"}</td>
-                  <td className="px-4 py-3 text-gray-600">{u.comision_porcentaje}%</td>
                   <td className="px-4 py-3 text-gray-600">{u.telefono || "—"}</td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
@@ -270,25 +268,7 @@ export default function UsersManagement() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-gray-600 mb-1.5">Agencia</label>
-                  <input
-                    type="text" value={form.agencia_nombre}
-                    onChange={(e) => setForm({ ...form, agencia_nombre: e.target.value })}
-                    className="w-full h-10 px-3 rounded-lg border border-gray-300 text-sm focus:outline-none focus:border-[#1D5D8C]"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-gray-600 mb-1.5">Comisión %</label>
-                  <input
-                    type="number" min="0" max="100" step="0.5"
-                    value={form.comision_porcentaje}
-                    onChange={(e) => setForm({ ...form, comision_porcentaje: e.target.value })}
-                    className="w-full h-10 px-3 rounded-lg border border-gray-300 text-sm focus:outline-none focus:border-[#1D5D8C]"
-                  />
-                </div>
-              </div>
+
 
               {error && (
                 <p className="text-xs text-red-600 bg-red-50 px-3 py-2 rounded-lg">{error}</p>

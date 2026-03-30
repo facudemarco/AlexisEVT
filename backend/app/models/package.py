@@ -29,13 +29,14 @@ paquete_punto_ascenso_table = Table(
 
 
 class PaqueteHotel(Base):
-    """Junction table paquete↔hotel con atributos extra (régimen, noches)."""
+    """Junction table paquete↔hotel con atributos extra (régimen, noches, precio)."""
     __tablename__ = "paquete_hotel"
 
     paquete_id = Column(Integer, ForeignKey("paquetes.id", ondelete="CASCADE"), primary_key=True)
     hotel_id = Column(Integer, ForeignKey("hoteles.id", ondelete="CASCADE"), primary_key=True)
     regimen = Column(String(100), nullable=True)
     cantidad_noches = Column(Integer, nullable=True)
+    precio = Column(DECIMAL(10, 2), nullable=True)
 
     hotel = relationship("Hotel")
 

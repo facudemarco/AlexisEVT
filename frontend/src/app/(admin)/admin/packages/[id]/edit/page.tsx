@@ -35,9 +35,14 @@ export default function EditPackagePage() {
           horario_regreso: pkg.horario_regreso ?? "",
           punto_ascenso_ids: Array.isArray(pkg.puntos_ascenso) ? pkg.puntos_ascenso.map((p: any) => p.id) : [],
           alojamiento_activo: Array.isArray(pkg.hotel_detalles) && pkg.hotel_detalles.length > 0,
-          hotel_id: pkg.hotel_detalles?.[0]?.hotel_id ? String(pkg.hotel_detalles[0].hotel_id) : "",
-          regimen: pkg.hotel_detalles?.[0]?.regimen ?? "",
-          cantidad_noches: String(pkg.hotel_detalles?.[0]?.cantidad_noches ?? ""),
+          hotel_detalles: Array.isArray(pkg.hotel_detalles) && pkg.hotel_detalles.length > 0
+            ? pkg.hotel_detalles.map((d: any) => ({
+                hotel_id: d.hotel_id ? String(d.hotel_id) : "",
+                regimen: d.regimen ?? "",
+                cantidad_noches: d.cantidad_noches ? String(d.cantidad_noches) : "",
+                precio: d.precio ? String(d.precio) : "",
+              }))
+            : [{ hotel_id: "", regimen: "", cantidad_noches: "", precio: "" }],
           include_transfer: pkg.include_transfer ?? false,
           include_asistencia_medica: pkg.include_asistencia_medica ?? false,
         });

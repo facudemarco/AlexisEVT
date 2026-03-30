@@ -14,6 +14,13 @@ interface Hotel { id: number; nombre: string; }
 interface PuntoAscenso { id: number; nombre_lugar: string; }
 interface Categoria { id: number; nombre: string; slug?: string; }
 
+interface HotelDetalle {
+  hotel_id: string;
+  regimen: string;
+  cantidad_noches: string;
+  precio: string;
+}
+
 interface FormState {
   destino_id: string;
   categoria_id: string;
@@ -35,12 +42,12 @@ interface FormState {
   horario_regreso: string;
   punto_ascenso_ids: number[];
   alojamiento_activo: boolean;
-  hotel_id: string;
-  regimen: string;
-  cantidad_noches: string;
+  hotel_detalles: HotelDetalle[];
   include_transfer: boolean;
   include_asistencia_medica: boolean;
 }
+
+const EMPTY_HOTEL: HotelDetalle = { hotel_id: "", regimen: "", cantidad_noches: "", precio: "" };
 
 const EMPTY: FormState = {
   destino_id: "", categoria_id: "", imagen_url: "",
@@ -53,7 +60,7 @@ const EMPTY: FormState = {
   transporte_activo: false, transporte_id: "",
   transporte_tipo: "", horario_salida: "", horario_regreso: "",
   punto_ascenso_ids: [],
-  alojamiento_activo: false, hotel_id: "", regimen: "", cantidad_noches: "",
+  alojamiento_activo: false, hotel_detalles: [{ ...EMPTY_HOTEL }],
   include_transfer: false, include_asistencia_medica: false,
 };
 
@@ -204,6 +211,14 @@ export function PackageForm({ initialData, packageId }: Props) {
     const arr = [...form.adicionales]; arr[i] = v; set("adicionales", arr);
   };
 
+  const addHotel = () => set("hotel_detalles", [...form.hotel_detalles, { ...EMPTY_HOTEL }]);
+  const removeHotel = (i: number) => set("hotel_detalles", form.hotel_detalles.filter((_, idx) => idx !== i));
+  const setHotelField = <K extends keyof HotelDetalle>(i: number, key: K, v: HotelDetalle[K]) => {
+    const arr = [...form.hotel_detalles];
+    arr[i] = { ...arr[i], [key]: v };
+    set("hotel_detalles", arr);
+  };
+
   const handleImageUpload = async (file: File) => {
     setUploadingImg(true);
     try {
@@ -252,11 +267,16 @@ export function PackageForm({ initialData, packageId }: Props) {
         include_asistencia_medica: form.include_asistencia_medica,
         es_borrador: esDraft,
         estado: true,
-        hotel_detalles: form.alojamiento_activo && form.hotel_id ? [{
-          hotel_id: Number(form.hotel_id),
-          regimen: form.regimen || null,
-          cantidad_noches: Number(form.cantidad_noches) || null,
-        }] : [],
+        hotel_detalles: form.alojamiento_activo
+          ? form.hotel_detalles
+              .filter((h) => h.hotel_id !== "")
+              .map((h) => ({
+                hotel_id: Number(h.hotel_id),
+                regimen: h.regimen || null,
+                cantidad_noches: Number(h.cantidad_noches) || null,
+                precio: h.precio ? Number(h.precio) : null,
+              }))
+          : [],
         transporte_ids: form.transporte_activo && form.transporte_id ? [Number(form.transporte_id)] : [],
         punto_ascenso_ids: form.punto_ascenso_ids,
         servicio_ids: [],
@@ -535,25 +555,58 @@ export function PackageForm({ initialData, packageId }: Props) {
           activo={form.alojamiento_activo}
           onToggle={(v) => set("alojamiento_activo", v)}
         >
-          <div className="grid grid-cols-3 gap-5">
-            <div>
-              <Label>Hotel</Label>
-              <Select value={form.hotel_id} onChange={(v) => set("hotel_id", v)}>
-                <option value="">Seleccionar</option>
-                {hoteles.map((h) => <option key={h.id} value={h.id}>{h.nombre}</option>)}
-              </Select>
-            </div>
-            <div>
-              <Label>Régimen</Label>
-              <Select value={form.regimen} onChange={(v) => set("regimen", v)}>
-                <option value="">Seleccionar</option>
-                {regimenes.map((r) => <option key={r} value={r}>{r}</option>)}
-              </Select>
-            </div>
-            <div>
-              <Label>Cant. de noches</Label>
-              <Input type="number" value={form.cantidad_noches} onChange={(v) => set("cantidad_noches", v)} placeholder="0" />
-            </div>
+          <div className="space-y-4">
+            {form.hotel_detalles.map((det, i) => (
+              <div key={i} className="rounded-xl border-2 border-gray-100 p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-bold text-gray-500 uppercase tracking-wide">
+                    Hotel {i + 1}
+                  </span>
+                  {form.hotel_detalles.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeHotel(i)}
+                      className="w-8 h-8 flex items-center justify-center rounded-lg border-2 border-gray-200 text-gray-400 hover:border-red-300 hover:text-red-500 transition-colors"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>Hotel</Label>
+                    <Select value={det.hotel_id} onChange={(v) => setHotelField(i, "hotel_id", v)}>
+                      <option value="">Seleccionar</option>
+                      {hoteles.map((h) => <option key={h.id} value={h.id}>{h.nombre}</option>)}
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Régimen</Label>
+                    <Select value={det.regimen} onChange={(v) => setHotelField(i, "regimen", v)}>
+                      <option value="">Seleccionar</option>
+                      {regimenes.map((r) => <option key={r} value={r}>{r}</option>)}
+                    </Select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>Precio por persona</Label>
+                    <Input type="number" value={det.precio} onChange={(v) => setHotelField(i, "precio", v)} placeholder="0" />
+                  </div>
+                  <div>
+                    <Label>Cant. de noches</Label>
+                    <Input type="number" value={det.cantidad_noches} onChange={(v) => setHotelField(i, "cantidad_noches", v)} placeholder="0" />
+                  </div>
+                </div>
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={addHotel}
+              className="flex items-center gap-2 text-sm font-bold text-[#1D5D8C] hover:text-[#164a70] transition-colors"
+            >
+              <Plus className="w-4 h-4" /> Agregar otro hotel
+            </button>
           </div>
         </SectionCard>
 

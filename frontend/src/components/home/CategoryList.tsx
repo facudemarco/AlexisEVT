@@ -26,7 +26,7 @@ const categories = [
 
 export function CategoryList() {
   return (
-    <section className="py-20 -mt-16 relative z-30 flex flex-col items-center w-full">
+    <section id="periodos" className="py-20 -mt-16 relative z-30 flex flex-col items-center w-full">
       <div className="bg-white w-full py-16 px-4 md:px-12 shadow-sm rounded-t-[30px]">
         <h2 className="text-xl md:text-2xl tracking-[0.1em] font-black text-center mb-10 text-gray-900 uppercase">
           Todas nuestras opciones

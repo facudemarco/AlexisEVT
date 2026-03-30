@@ -49,6 +49,18 @@ export function PackageSidebar({ paquete }: Props) {
     }
   }, [isAdmin]);
 
+  // Hotel selector (cuando hay múltiples hoteles con precio propio)
+  const hotelesConPrecio = paquete.hotel_detalles?.filter((d) => d.hotel && d.precio != null && d.precio > 0) ?? [];
+  const tieneOpcionesHotel = hotelesConPrecio.length > 1;
+  const primerHotelId = hotelesConPrecio[0]?.hotel_id != null ? String(hotelesConPrecio[0].hotel_id) : "";
+  const [hotelSeleccionado, setHotelSeleccionado] = useState<string>(primerHotelId);
+
+  const hotelActual = tieneOpcionesHotel
+    ? hotelesConPrecio.find((d) => String(d.hotel_id) === hotelSeleccionado) ?? hotelesConPrecio[0]
+    : hotelesConPrecio[0];
+
+  const precioBase = hotelActual?.precio ?? paquete.precio_base;
+
   // Step 1
   const [adultos, setAdultos] = useState(1);
   const [menores, setMenores] = useState(0);
@@ -61,8 +73,8 @@ export function PackageSidebar({ paquete }: Props) {
   const [error, setError] = useState("");
 
   const totalPax = adultos + menores;
-  const precioTotal = (paquete.precio_base + (paquete.precio_adicional ?? 0)) * adultos
-    + paquete.precio_base * menores;
+  const precioTotal = (precioBase + (paquete.precio_adicional ?? 0)) * adultos
+    + precioBase * menores;
 
   function goToPassengers() {
     const count = totalPax;
@@ -125,6 +137,7 @@ export function PackageSidebar({ paquete }: Props) {
         pasajeros_adultos: adultos,
         pasajeros_menores: menores,
         precio_total: precioTotal,
+        hotel_id: hotelActual?.hotel_id ?? undefined,
         pasajeros: pasajeros.map((p) => ({
           nombre: p.nombre,
           apellido: p.apellido,
@@ -168,6 +181,11 @@ export function PackageSidebar({ paquete }: Props) {
     msg += `*Pasajeros:* ${adultos} adulto${adultos !== 1 ? "s" : ""}`;
     if (menores > 0) msg += ` + ${menores} menor${menores !== 1 ? "es" : ""}`;
     msg += `\n`;
+    if (hotelActual?.hotel?.nombre) {
+      msg += `*Hotel:* ${hotelActual.hotel.nombre}`;
+      if (hotelActual.regimen) msg += ` (${hotelActual.regimen})`;
+      msg += `\n`;
+    }
     msg += `*Precio total estimado:* ${formatPrice(precioTotal, paquete.moneda)}\n`;
     msg += `\n── *Detalle de pasajeros* ──\n`;
 
@@ -198,9 +216,51 @@ export function PackageSidebar({ paquete }: Props) {
     <div className="space-y-4">
       {/* Price card */}
       <div className="bg-white rounded-2xl shadow p-6 space-y-4">
-        <p className="text-sm text-gray-600">Precio por persona</p>
+        <p className="text-sm text-gray-600">
+          {tieneOpcionesHotel ? "Precio por persona" : "Precio por persona"}
+        </p>
+
+        {/* Selector de hotel si hay múltiples con precio */}
+        {tieneOpcionesHotel && (
+          <div>
+            <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wide">
+              Seleccioná tu hotel
+            </label>
+            <div className="space-y-2">
+              {hotelesConPrecio.map((d) => (
+                <label
+                  key={d.hotel_id}
+                  className={`flex items-center justify-between gap-3 cursor-pointer px-4 py-3 rounded-xl border-2 transition-colors ${
+                    String(d.hotel_id) === hotelSeleccionado
+                      ? "border-[#1D5D8C] bg-[#1D5D8C]/5"
+                      : "border-gray-200 hover:border-gray-300"
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <input
+                      type="radio"
+                      name="hotel_selector"
+                      value={String(d.hotel_id)}
+                      checked={String(d.hotel_id) === hotelSeleccionado}
+                      onChange={() => setHotelSeleccionado(String(d.hotel_id))}
+                      className="accent-[#1D5D8C] flex-shrink-0"
+                    />
+                    <div className="min-w-0">
+                      <p className="text-sm font-bold text-gray-800 truncate">{d.hotel?.nombre}</p>
+                      {d.regimen && <p className="text-xs text-gray-500">{d.regimen}</p>}
+                    </div>
+                  </div>
+                  <span className="text-sm font-black text-[#1D5D8C] flex-shrink-0">
+                    {formatPrice(d.precio!, paquete.moneda)}
+                  </span>
+                </label>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="flex items-baseline gap-2 flex-wrap">
-          <span className="text-4xl font-black text-brand-primary">{formatPrice(paquete.precio_base, paquete.moneda)}</span>
+          <span className="text-4xl font-black text-brand-primary">{formatPrice(precioBase, paquete.moneda)}</span>
           {paquete.precio_adicional > 0 && (
             <span className="text-base text-gray-500 font-medium">+ {formatPrice(paquete.precio_adicional, paquete.moneda)}</span>
           )}

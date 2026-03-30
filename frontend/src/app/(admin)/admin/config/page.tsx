@@ -28,7 +28,7 @@ interface Hotel {
   imagenes: string[];
 }
 
-type Tab = "hoteles" | "clientes" | "usuarios" | "destinos" | "transporte" | "lugares";
+type Tab = "hoteles" | "usuarios" | "destinos" | "transporte" | "lugares";
 
 // ── Helpers UI ─────────────────────────────────────────────────────────────
 
@@ -1297,7 +1297,6 @@ function LugaresCargaTab({ addTrigger }: { addTrigger: number }) {
 
 const TABS: { key: Tab; label: string }[] = [
   { key: "hoteles", label: "Hoteles" },
-  { key: "clientes", label: "Clientes" },
   { key: "destinos", label: "Destinos" },
   { key: "transporte", label: "Transporte" },
   { key: "lugares", label: "Lugares de carga" },
@@ -1305,7 +1304,6 @@ const TABS: { key: Tab; label: string }[] = [
 
 const ADD_LABELS: Record<Tab, string> = {
   hoteles: "Agregar Hotel",
-  clientes: "Agregar Cliente",
   destinos: "Agregar Destino",
   transporte: "Agregar Empresa de transporte",
   lugares: "Agregar Lugar de carga",
@@ -1358,7 +1356,6 @@ export default function ConfigAdminPage() {
 
       {/* Contenido */}
       {tab === "hoteles" && <HotelesTab addTrigger={addTrigger} />}
-      {tab === "clientes" && <ClientesTab addTrigger={addTrigger} />}
       {tab === "destinos" && <DestinosTab addTrigger={addTrigger} />}
       {tab === "transporte" && <TransporteTab addTrigger={addTrigger} />}
       {tab === "lugares" && <LugaresCargaTab addTrigger={addTrigger} />}

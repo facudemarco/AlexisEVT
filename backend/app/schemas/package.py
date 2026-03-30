@@ -10,12 +10,14 @@ class PaqueteHotelDetalleCreate(BaseModel):
     hotel_id: int
     regimen: Optional[str] = None
     cantidad_noches: Optional[int] = None
+    precio: Optional[float] = None
 
 class PaqueteHotelDetalle(BaseModel):
     hotel_id: int
     hotel: Optional[Hotel] = None
     regimen: Optional[str] = None
     cantidad_noches: Optional[int] = None
+    precio: Optional[float] = None
 
     class Config:
         from_attributes = True
