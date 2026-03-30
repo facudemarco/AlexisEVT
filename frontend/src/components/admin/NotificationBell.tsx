@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { Bell, CheckCheck } from "lucide-react";
 import { fetchApi } from "@/lib/api";
 import { cn } from "@/lib/utils";
@@ -44,6 +45,8 @@ export function NotificationBell() {
   const [open, setOpen]           = useState(false);
   const [loading, setLoading]     = useState(false);
   const panelRef                  = useRef<HTMLDivElement>(null);
+  const bellRef                   = useRef<HTMLButtonElement>(null);
+  const [dropdownPos, setDropdownPos] = useState({ top: 0, right: 0 });
 
   async function fetchNotifs() {
     try {
@@ -59,16 +62,42 @@ export function NotificationBell() {
     return () => clearInterval(interval);
   }, []);
 
+  const updatePos = useCallback(() => {
+    if (bellRef.current) {
+      const rect = bellRef.current.getBoundingClientRect();
+      setDropdownPos({
+        top: rect.bottom + window.scrollY + 8,
+        right: window.innerWidth - rect.right,
+      });
+    }
+  }, []);
+
+  // Versión throttled para eventos frecuentes (scroll/resize)
+  const updatePosThrottled = useCallback(() => {
+    requestAnimationFrame(() => updatePos());
+  }, [updatePos]);
+
   // Cerrar al hacer click fuera
   useEffect(() => {
     function handleClick(e: MouseEvent) {
-      if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
+      if (
+        panelRef.current && !panelRef.current.contains(e.target as Node) &&
+        bellRef.current && !bellRef.current.contains(e.target as Node)
+      ) {
         setOpen(false);
       }
     }
-    if (open) document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, [open]);
+    if (open) {
+      document.addEventListener("mousedown", handleClick);
+      window.addEventListener("scroll", updatePosThrottled, { passive: true, capture: true });
+      window.addEventListener("resize", updatePosThrottled, { passive: true });
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClick);
+      window.removeEventListener("scroll", updatePosThrottled, true);
+      window.removeEventListener("resize", updatePosThrottled);
+    };
+  }, [open, updatePos, updatePosThrottled]);
 
   async function markAllRead() {
     setLoading(true);
@@ -89,11 +118,70 @@ export function NotificationBell() {
     } catch { /* silenciar */ }
   }
 
+  const dropdown = open ? (
+    <div
+      ref={panelRef}
+      style={{ position: "absolute", top: dropdownPos.top, right: dropdownPos.right }}
+      className="w-80 bg-white rounded-xl shadow-2xl border border-gray-200 z-[9999] overflow-hidden"
+    >
+      {/* Panel header */}
+      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+        <span className="font-bold text-gray-900 text-sm">Notificaciones</span>
+        {unread > 0 && (
+          <button
+            onClick={markAllRead}
+            disabled={loading}
+            className="flex items-center gap-1 text-xs font-semibold text-[#1D5D8C] hover:underline disabled:opacity-50"
+          >
+            <CheckCheck className="w-3.5 h-3.5" />
+            Marcar todo como leído
+          </button>
+        )}
+      </div>
+
+      {/* List */}
+      <div className="max-h-80 overflow-y-auto">
+        {notifs.length === 0 ? (
+          <p className="px-4 py-6 text-center text-sm text-gray-400">Sin notificaciones</p>
+        ) : (
+          notifs.map((n) => (
+            <button
+              key={n.id}
+              onClick={() => !n.leida && markRead(n.id)}
+              className={cn(
+                "w-full text-left px-4 py-3 border-b border-gray-50 last:border-0 transition-colors hover:bg-gray-50 flex gap-3 items-start",
+                !n.leida && "bg-blue-50/40"
+              )}
+            >
+              <span className={cn(
+                "mt-1.5 w-2 h-2 rounded-full flex-shrink-0",
+                n.leida ? "bg-gray-300" : (TIPO_DOT[n.tipo] ?? "bg-[#1D5D8C]")
+              )} />
+              <div className="flex-1 min-w-0">
+                <p className={cn(
+                  "text-sm leading-snug",
+                  n.leida ? "text-gray-500" : "text-gray-800 font-medium"
+                )}>
+                  {n.mensaje}
+                </p>
+                <p className="text-xs text-gray-400 mt-0.5">{fmtRelative(n.fecha_creacion)}</p>
+              </div>
+            </button>
+          ))
+        )}
+      </div>
+    </div>
+  ) : null;
+
   return (
-    <div ref={panelRef} className="relative">
+    <>
       {/* Bell button */}
       <button
-        onClick={() => setOpen((o) => !o)}
+        ref={bellRef}
+        onClick={() => {
+          updatePos();
+          setOpen((o) => !o);
+        }}
         className="relative flex items-center justify-center w-9 h-9 rounded-full hover:bg-white/20 transition-colors"
         aria-label="Notificaciones"
       >
@@ -105,58 +193,8 @@ export function NotificationBell() {
         )}
       </button>
 
-      {/* Dropdown panel */}
-      {open && (
-        <div className="absolute right-0 top-11 w-80 bg-white rounded-xl shadow-2xl border border-gray-200 z-50 overflow-hidden">
-          {/* Panel header */}
-          <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
-            <span className="font-bold text-gray-900 text-sm">Notificaciones</span>
-            {unread > 0 && (
-              <button
-                onClick={markAllRead}
-                disabled={loading}
-                className="flex items-center gap-1 text-xs font-semibold text-[#1D5D8C] hover:underline disabled:opacity-50"
-              >
-                <CheckCheck className="w-3.5 h-3.5" />
-                Marcar todo como leído
-              </button>
-            )}
-          </div>
-
-          {/* List */}
-          <div className="max-h-80 overflow-y-auto">
-            {notifs.length === 0 ? (
-              <p className="px-4 py-6 text-center text-sm text-gray-400">Sin notificaciones</p>
-            ) : (
-              notifs.map((n) => (
-                <button
-                  key={n.id}
-                  onClick={() => !n.leida && markRead(n.id)}
-                  className={cn(
-                    "w-full text-left px-4 py-3 border-b border-gray-50 last:border-0 transition-colors hover:bg-gray-50 flex gap-3 items-start",
-                    !n.leida && "bg-blue-50/40"
-                  )}
-                >
-                  {/* Dot */}
-                  <span className={cn(
-                    "mt-1.5 w-2 h-2 rounded-full flex-shrink-0",
-                    n.leida ? "bg-gray-300" : (TIPO_DOT[n.tipo] ?? "bg-[#1D5D8C]")
-                  )} />
-                  <div className="flex-1 min-w-0">
-                    <p className={cn(
-                      "text-sm leading-snug",
-                      n.leida ? "text-gray-500" : "text-gray-800 font-medium"
-                    )}>
-                      {n.mensaje}
-                    </p>
-                    <p className="text-xs text-gray-400 mt-0.5">{fmtRelative(n.fecha_creacion)}</p>
-                  </div>
-                </button>
-              ))
-            )}
-          </div>
-        </div>
-      )}
-    </div>
+      {/* Dropdown portaled to body to escape overflow:hidden */}
+      {typeof document !== "undefined" && dropdown && createPortal(dropdown, document.body)}
+    </>
   );
 }

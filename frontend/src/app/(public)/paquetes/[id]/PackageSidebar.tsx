@@ -1,10 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Users, ChevronDown, ChevronUp, Loader2, CheckCircle, MessageCircle } from "lucide-react";
 import { Paquete, PuntoAscenso } from "@/types/package";
 import { useAuth } from "@/components/auth-provider";
 import { fetchApi } from "@/lib/api";
+
+interface Vendedor { id: number; nombre: string; nombre_sistema?: string; }
 
 interface Props {
   paquete: Paquete;
@@ -32,9 +34,20 @@ const WHATSAPP_NUMBER = "5491121721486"; // Matches footer: 11-2172-1486
 export function PackageSidebar({ paquete }: Props) {
   const { isAuthenticated, role } = useAuth();
   const isVendedor = isAuthenticated && role === "vendedor";
+  const isAdmin = isAuthenticated && role === "admin";
   const isPublic = !isAuthenticated;
-  const canBooking = isVendedor || isPublic; // Both vendedor and public users can book
+  const canBooking = isVendedor || isAdmin || isPublic;
   const puntosAscenso: PuntoAscenso[] = paquete.puntos_ascenso ?? [];
+
+  // Admin: lista de vendedores para asignar la reserva
+  const [vendedores, setVendedores] = useState<Vendedor[]>([]);
+  const [vendedorSeleccionado, setVendedorSeleccionado] = useState<string>("particular");
+
+  useEffect(() => {
+    if (isAdmin) {
+      fetchApi("/users/?rol=vendedor").then(setVendedores).catch(() => {});
+    }
+  }, [isAdmin]);
 
   // Step 1
   const [adultos, setAdultos] = useState(1);
@@ -100,33 +113,35 @@ export function PackageSidebar({ paquete }: Props) {
     return true;
   }
 
-  // Vendedor: submit via API
+  // Vendedor/Admin: submit via API
   async function handleSubmitVendedor() {
     if (!validatePassengers()) return;
     setSaving(true);
     try {
-      await fetchApi("/bookings/", {
-        method: "POST",
-        body: JSON.stringify({
-          paquete_id: paquete.id,
-          cliente_nombre: `${pasajeros[0].nombre} ${pasajeros[0].apellido}`.trim(),
-          cliente_telefono: pasajeros[0].telefono || undefined,
-          pasajeros_adultos: adultos,
-          pasajeros_menores: menores,
-          precio_total: precioTotal,
-          pasajeros: pasajeros.map((p) => ({
-            nombre: p.nombre,
-            apellido: p.apellido,
-            dni: p.dni || undefined,
-            fecha_nacimiento: p.fecha_nacimiento || undefined,
-            telefono: p.telefono || undefined,
-            punto_ascenso_id: p.punto_ascenso_id ? parseInt(p.punto_ascenso_id) : undefined,
-          })),
-        }),
-      });
+      const body: Record<string, unknown> = {
+        paquete_id: paquete.id,
+        cliente_nombre: `${pasajeros[0].nombre} ${pasajeros[0].apellido}`.trim(),
+        cliente_telefono: pasajeros[0].telefono || undefined,
+        pasajeros_adultos: adultos,
+        pasajeros_menores: menores,
+        precio_total: precioTotal,
+        pasajeros: pasajeros.map((p) => ({
+          nombre: p.nombre,
+          apellido: p.apellido,
+          dni: p.dni || undefined,
+          fecha_nacimiento: p.fecha_nacimiento || undefined,
+          telefono: p.telefono || undefined,
+          punto_ascenso_id: p.punto_ascenso_id ? parseInt(p.punto_ascenso_id) : undefined,
+        })),
+      };
+      // Admin puede asignar a un vendedor específico
+      if (isAdmin && vendedorSeleccionado !== "particular") {
+        body.vendedor_id = parseInt(vendedorSeleccionado);
+      }
+      await fetchApi("/bookings/", { method: "POST", body: JSON.stringify(body) });
       setStep("success");
-    } catch (err: any) {
-      setError(err.message || "Error al cargar la reserva.");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Error al cargar la reserva.");
     } finally {
       setSaving(false);
     }
@@ -335,8 +350,25 @@ export function PackageSidebar({ paquete }: Props) {
             </div>
           )}
 
-          <div className="px-6 pb-5 pt-2">
-            {isVendedor ? (
+          <div className="px-6 pb-5 pt-2 flex flex-col gap-3">
+            {isAdmin && (
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1">Asignar reserva a</label>
+                <select
+                  value={vendedorSeleccionado}
+                  onChange={(e) => setVendedorSeleccionado(e.target.value)}
+                  className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-[#1D5D8C] bg-white text-gray-700"
+                >
+                  <option value="particular">Particular (sin vendedor)</option>
+                  {vendedores.map((v) => (
+                    <option key={v.id} value={v.id}>
+                      {v.nombre_sistema || v.nombre}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+            {(isVendedor || isAdmin) ? (
               <button
                 onClick={handleSubmitVendedor}
                 disabled={saving}
@@ -368,6 +400,24 @@ export function PackageSidebar({ paquete }: Props) {
           </a>
           <button
             onClick={() => { setStep("select"); setPasajeros([emptyPax()]); setAdultos(1); setMenores(0); setError(""); }}
+            className="block w-full text-center border border-gray-300 text-gray-700 font-bold py-3 rounded-xl hover:bg-gray-50 transition-colors"
+          >
+            Cargar otra reserva
+          </button>
+        </div>
+      )}
+
+      {/* Step 3 — éxito (admin) */}
+      {isAdmin && step === "success" && (
+        <div className="bg-white rounded-2xl shadow p-6 text-center space-y-3">
+          <CheckCircle className="w-12 h-12 text-green-500 mx-auto" />
+          <p className="font-bold text-gray-900 text-lg">¡Reserva confirmada!</p>
+          <p className="text-sm text-gray-500">La reserva quedó en estado <span className="font-semibold text-green-600">Aprobada</span> automáticamente.</p>
+          <a href="/admin/bookings" className="block w-full text-center bg-[#1D5D8C] hover:bg-[#164a70] text-white font-bold py-3 rounded-xl transition-colors mt-2">
+            Ver reservas
+          </a>
+          <button
+            onClick={() => { setStep("select"); setPasajeros([emptyPax()]); setAdultos(1); setMenores(0); setError(""); setVendedorSeleccionado("particular"); }}
             className="block w-full text-center border border-gray-300 text-gray-700 font-bold py-3 rounded-xl hover:bg-gray-50 transition-colors"
           >
             Cargar otra reserva

@@ -54,7 +54,8 @@ function PackageCard({ paquete }: { paquete: Paquete }) {
           src={paquete.imagen_url}
           alt={paquete.destino?.nombre ?? "Paquete"}
           fill
-          className="object-cover transition-transform duration-700 group-hover:scale-105"
+          sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
+          className="object-cover transition-transform duration-300 group-hover:scale-[1.03] [will-change:transform]"
         />
       ) : (
         <div className="absolute inset-0 bg-gradient-to-br from-[#2a4f6e] to-[#1a2f45]" />

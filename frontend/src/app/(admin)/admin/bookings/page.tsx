@@ -14,6 +14,8 @@ import {
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
+  Plus,
+  Users,
 } from "lucide-react";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -159,6 +161,7 @@ function DetailModal({ reserva, onClose, onUpdate }: {
   const hotel = p?.hotel_detalles?.[0]?.hotel?.nombre ?? "—";
   const isAprobada = reserva.estado_reserva === "Aprobada";
   const isPendiente = reserva.estado_reserva === "Pendiente";
+  const isRechazada = reserva.estado_reserva === "Rechazada";
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
@@ -358,6 +361,27 @@ function DetailModal({ reserva, onClose, onUpdate }: {
                   </button>
                 </>
               )}
+
+              {isRechazada && (
+                <>
+                  <button
+                    onClick={() => changeStatus("Pendiente")}
+                    disabled={saving}
+                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-yellow-400 text-white font-bold text-sm hover:bg-yellow-500 transition-colors disabled:opacity-50"
+                  >
+                    {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                    Pasar a Pendiente
+                  </button>
+                  <button
+                    onClick={() => changeStatus("Aprobada")}
+                    disabled={saving}
+                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-green-500 text-white font-bold text-sm hover:bg-green-600 transition-colors disabled:opacity-50"
+                  >
+                    {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
+                    Confirmar
+                  </button>
+                </>
+              )}
             </>
           )}
 
@@ -398,6 +422,253 @@ function DetailModal({ reserva, onClose, onUpdate }: {
   );
 }
 
+// ─── Create Booking Modal ─────────────────────────────────────────────────────
+
+interface PaqueteOption { id: number; titulo_subtitulo: string; precio_base: number; precio_adicional: number; moneda: string; }
+interface VendedorOption { id: number; nombre: string; nombre_sistema?: string; }
+interface PaxForm { nombre: string; apellido: string; dni: string; fecha_nacimiento: string; telefono: string; }
+const emptyPax = (): PaxForm => ({ nombre: "", apellido: "", dni: "", fecha_nacimiento: "", telefono: "" });
+
+function CreateBookingModal({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
+  const [paquetes, setPaquetes] = useState<PaqueteOption[]>([]);
+  const [vendedores, setVendedores] = useState<VendedorOption[]>([]);
+  const [loadingOpts, setLoadingOpts] = useState(true);
+
+  const [paqueteId, setPaqueteId] = useState("");
+  const [vendedorId, setVendedorId] = useState("particular");
+  const [clienteNombre, setClienteNombre] = useState("");
+  const [clienteEmail, setClienteEmail] = useState("");
+  const [clienteTelefono, setClienteTelefono] = useState("");
+  const [adultos, setAdultos] = useState(1);
+  const [menores, setMenores] = useState(0);
+  const [pasajeros, setPasajeros] = useState<PaxForm[]>([emptyPax()]);
+  const [expanded, setExpanded] = useState(0);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    Promise.all([
+      fetchApi("/packages/"),
+      fetchApi("/users/?rol=vendedor"),
+    ]).then(([pkgs, vends]) => {
+      setPaquetes(pkgs);
+      setVendedores(vends);
+    }).catch(() => {}).finally(() => setLoadingOpts(false));
+  }, []);
+
+  const totalPax = adultos + menores;
+  const selectedPkg = paquetes.find((p) => String(p.id) === paqueteId);
+  const precioTotal = selectedPkg
+    ? (selectedPkg.precio_base + (selectedPkg.precio_adicional ?? 0)) * adultos + selectedPkg.precio_base * menores
+    : 0;
+
+  function syncPaxCount(newTotal: number) {
+    setPasajeros((prev) => {
+      if (newTotal > prev.length) return [...prev, ...Array(newTotal - prev.length).fill(null).map(emptyPax)];
+      return prev.slice(0, newTotal);
+    });
+  }
+
+  function updatePax(idx: number, field: keyof PaxForm, value: string) {
+    setPasajeros((prev) => prev.map((p, i) => i === idx ? { ...p, [field]: value } : p));
+  }
+
+  async function handleSave() {
+    if (!paqueteId) { setError("Seleccioná un paquete."); return; }
+    if (!clienteNombre.trim()) { setError("Ingresá el nombre del cliente."); return; }
+    for (let i = 0; i < pasajeros.length; i++) {
+      const p = pasajeros[i];
+      if (!p.nombre.trim() || !p.apellido.trim()) { setError(`Completá nombre y apellido del pasajero ${i + 1}.`); setExpanded(i); return; }
+      if (!p.dni.trim()) { setError(`Ingresá el DNI del pasajero ${i + 1}.`); setExpanded(i); return; }
+    }
+    setError(""); setSaving(true);
+    try {
+      const body: Record<string, unknown> = {
+        paquete_id: parseInt(paqueteId),
+        cliente_nombre: clienteNombre.trim(),
+        cliente_email: clienteEmail.trim() || undefined,
+        cliente_telefono: clienteTelefono.trim() || undefined,
+        pasajeros_adultos: adultos,
+        pasajeros_menores: menores,
+        precio_total: precioTotal,
+        pasajeros: pasajeros.map((p) => ({
+          nombre: p.nombre, apellido: p.apellido,
+          dni: p.dni || undefined,
+          fecha_nacimiento: p.fecha_nacimiento || undefined,
+          telefono: p.telefono || undefined,
+        })),
+      };
+      if (vendedorId !== "particular") body.vendedor_id = parseInt(vendedorId);
+      await fetchApi("/bookings/", { method: "POST", body: JSON.stringify(body) });
+      onCreated();
+      onClose();
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Error al crear la reserva.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl flex flex-col max-h-[90vh] overflow-hidden">
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+          <h2 className="text-2xl font-black text-gray-900">Nueva reserva</h2>
+          <button onClick={onClose} className="p-1 rounded-lg hover:bg-gray-100 transition-colors">
+            <X className="w-5 h-5 text-gray-500" />
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
+          {loadingOpts ? (
+            <div className="flex items-center gap-2 text-gray-400 py-8 justify-center">
+              <Loader2 className="w-5 h-5 animate-spin" />
+              <span className="text-sm">Cargando...</span>
+            </div>
+          ) : (
+            <>
+              {/* Paquete */}
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-1.5">Paquete *</label>
+                <select
+                  value={paqueteId}
+                  onChange={(e) => setPaqueteId(e.target.value)}
+                  className="w-full h-11 px-4 rounded-xl border-2 border-gray-200 bg-white text-sm font-medium text-gray-700 focus:outline-none focus:border-[#1D5D8C] transition-colors appearance-none"
+                >
+                  <option value="">Seleccionar paquete...</option>
+                  {paquetes.map((p) => (
+                    <option key={p.id} value={p.id}>{p.titulo_subtitulo}</option>
+                  ))}
+                </select>
+                {selectedPkg && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    Precio base: ${selectedPkg.precio_base.toLocaleString("es-AR")} {selectedPkg.moneda}
+                  </p>
+                )}
+              </div>
+
+              {/* Vendedor */}
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-1.5">Vendedor</label>
+                <select
+                  value={vendedorId}
+                  onChange={(e) => setVendedorId(e.target.value)}
+                  className="w-full h-11 px-4 rounded-xl border-2 border-gray-200 bg-white text-sm font-medium text-gray-700 focus:outline-none focus:border-[#1D5D8C] transition-colors appearance-none"
+                >
+                  <option value="particular">Particular (sin vendedor asignado)</option>
+                  {vendedores.map((v) => (
+                    <option key={v.id} value={v.id}>{v.nombre_sistema || v.nombre}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Cliente */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div className="md:col-span-1">
+                  <label className="block text-sm font-bold text-gray-700 mb-1.5">Nombre del cliente *</label>
+                  <input value={clienteNombre} onChange={(e) => setClienteNombre(e.target.value)} placeholder="Nombre y apellido" className="w-full h-11 px-4 rounded-xl border-2 border-gray-200 text-sm font-medium text-gray-800 placeholder:text-gray-400 placeholder:font-normal focus:outline-none focus:border-[#1D5D8C] transition-colors" />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-1.5">Email</label>
+                  <input value={clienteEmail} onChange={(e) => setClienteEmail(e.target.value)} placeholder="email@ejemplo.com" type="email" className="w-full h-11 px-4 rounded-xl border-2 border-gray-200 text-sm font-medium text-gray-800 placeholder:text-gray-400 placeholder:font-normal focus:outline-none focus:border-[#1D5D8C] transition-colors" />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-1.5">Teléfono</label>
+                  <input value={clienteTelefono} onChange={(e) => setClienteTelefono(e.target.value)} placeholder="11-1234-5678" type="tel" className="w-full h-11 px-4 rounded-xl border-2 border-gray-200 text-sm font-medium text-gray-800 placeholder:text-gray-400 placeholder:font-normal focus:outline-none focus:border-[#1D5D8C] transition-colors" />
+                </div>
+              </div>
+
+              {/* Pasajeros */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-1.5">Adultos</label>
+                  <div className="flex items-center gap-3">
+                    <button onClick={() => { const v = Math.max(1, adultos - 1); setAdultos(v); syncPaxCount(v + menores); }} className="w-8 h-8 border border-gray-300 rounded-lg flex items-center justify-center text-gray-600 hover:bg-gray-100 font-bold">−</button>
+                    <span className="font-bold text-gray-800 w-4 text-center">{adultos}</span>
+                    <button onClick={() => { const v = adultos + 1; setAdultos(v); syncPaxCount(v + menores); }} className="w-8 h-8 border border-gray-300 rounded-lg flex items-center justify-center text-gray-600 hover:bg-gray-100 font-bold">+</button>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-1.5">Menores</label>
+                  <div className="flex items-center gap-3">
+                    <button onClick={() => { const v = Math.max(0, menores - 1); setMenores(v); syncPaxCount(adultos + v); }} className="w-8 h-8 border border-gray-300 rounded-lg flex items-center justify-center text-gray-600 hover:bg-gray-100 font-bold">−</button>
+                    <span className="font-bold text-gray-800 w-4 text-center">{menores}</span>
+                    <button onClick={() => { const v = menores + 1; setMenores(v); syncPaxCount(adultos + v); }} className="w-8 h-8 border border-gray-300 rounded-lg flex items-center justify-center text-gray-600 hover:bg-gray-100 font-bold">+</button>
+                  </div>
+                </div>
+              </div>
+
+              {selectedPkg && (
+                <div className="bg-blue-50 rounded-xl px-4 py-3 flex items-center justify-between">
+                  <span className="text-sm font-semibold text-gray-700 flex items-center gap-2"><Users className="w-4 h-4" />{totalPax} pasajero{totalPax !== 1 ? "s" : ""}</span>
+                  <span className="text-base font-black text-[#1D5D8C]">${precioTotal.toLocaleString("es-AR")} {selectedPkg.moneda}</span>
+                </div>
+              )}
+
+              {/* Formularios de pasajeros */}
+              <div>
+                <p className="text-sm font-bold text-gray-700 mb-3">Datos de los pasajeros</p>
+                <div className="space-y-2 rounded-xl border border-gray-200 overflow-hidden">
+                  {pasajeros.map((pax, idx) => (
+                    <div key={idx} className="border-b border-gray-100 last:border-0">
+                      <button
+                        type="button"
+                        onClick={() => setExpanded(expanded === idx ? -1 : idx)}
+                        className="w-full flex items-center justify-between px-5 py-3.5 text-sm font-semibold text-gray-800 hover:bg-gray-50 transition-colors"
+                      >
+                        <span>
+                          Pasajero {idx + 1} {idx < adultos ? "(Adulto)" : "(Menor)"}
+                          {pax.nombre && pax.apellido && <span className="font-normal text-gray-500 ml-2">— {pax.nombre} {pax.apellido}</span>}
+                        </span>
+                        {expanded === idx ? <ChevronLeft className="w-4 h-4 rotate-90 text-gray-400" /> : <ChevronLeft className="w-4 h-4 -rotate-90 text-gray-400" />}
+                      </button>
+                      {expanded === idx && (
+                        <div className="px-5 pb-4 grid grid-cols-2 gap-3">
+                          <input placeholder="Nombre *" value={pax.nombre} onChange={(e) => updatePax(idx, "nombre", e.target.value)} className="px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-[#1D5D8C]" />
+                          <input placeholder="Apellido *" value={pax.apellido} onChange={(e) => updatePax(idx, "apellido", e.target.value)} className="px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-[#1D5D8C]" />
+                          <input placeholder="DNI *" value={pax.dni} onChange={(e) => updatePax(idx, "dni", e.target.value)} className="px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-[#1D5D8C] col-span-2" />
+                          <div className="col-span-2 flex flex-col gap-1">
+                            <label className="text-xs text-gray-500 font-medium">Fecha de nacimiento</label>
+                            <input type="date" value={pax.fecha_nacimiento} onChange={(e) => updatePax(idx, "fecha_nacimiento", e.target.value)} className="px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-[#1D5D8C] text-gray-700" />
+                          </div>
+                          <input placeholder="Teléfono" value={pax.telefono} onChange={(e) => updatePax(idx, "telefono", e.target.value)} className="px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-[#1D5D8C] col-span-2" />
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {error && (
+                <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-xl px-4 py-3 font-medium">{error}</p>
+              )}
+            </>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
+          <p className="text-xs text-gray-400">La reserva se creará en estado <span className="font-semibold text-green-600">Aprobada</span> automáticamente.</p>
+          <div className="flex gap-3">
+            <button onClick={onClose} className="px-5 py-2.5 rounded-xl border-2 border-gray-200 text-gray-600 font-bold text-sm hover:border-gray-300 transition-colors">
+              Cancelar
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={saving || loadingOpts}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#1D5D8C] text-white font-bold text-sm hover:bg-[#164a70] transition-colors disabled:opacity-60"
+            >
+              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
+              Crear reserva
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function BookingsPage() {
@@ -416,6 +687,7 @@ export default function BookingsPage() {
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
   const [selected, setSelected] = useState<Reserva | null>(null);
+  const [showCreate, setShowCreate] = useState(false);
 
   async function load() {
     setLoading(true);
@@ -493,7 +765,16 @@ export default function BookingsPage() {
 
   return (
     <div className="p-4 md:p-6 h-full flex flex-col gap-6">
-      <h1 className="text-4xl font-black text-gray-900 tracking-tight">Reservas</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-4xl font-black text-gray-900 tracking-tight">Reservas</h1>
+        <button
+          onClick={() => setShowCreate(true)}
+          className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#1D5D8C] text-white font-bold text-sm hover:bg-[#164a70] transition-colors"
+        >
+          <Plus className="w-4 h-4" />
+          Nueva reserva
+        </button>
+      </div>
 
       {/* Filters */}
       <div className="flex flex-wrap gap-5 items-end">
@@ -675,6 +956,13 @@ export default function BookingsPage() {
             handleUpdate(updated);
             setSelected(updated);
           }}
+        />
+      )}
+
+      {showCreate && (
+        <CreateBookingModal
+          onClose={() => setShowCreate(false)}
+          onCreated={load}
         />
       )}
     </div>

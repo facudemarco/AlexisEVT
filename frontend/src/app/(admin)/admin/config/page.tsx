@@ -127,15 +127,20 @@ function HotelModal({
   const set = (key: keyof HotelFormState, v: string | string[]) =>
     setForm((prev) => ({ ...prev, [key]: v }));
 
-  const handleImageUpload = async (file: File) => {
+  const handleImageUpload = async (files: FileList) => {
     setUploadingImg(true);
+    setError("");
+    const uploaded: string[] = [];
     try {
-      const fd = new FormData();
-      fd.append("file", file);
-      const data = await fetchApi("/uploads/image", { method: "POST", body: fd });
-      set("imagenes", [...form.imagenes, data.url]);
+      for (const file of Array.from(files)) {
+        const fd = new FormData();
+        fd.append("file", file);
+        const data = await fetchApi("/uploads/image", { method: "POST", body: fd });
+        uploaded.push(data.url);
+      }
+      set("imagenes", [...form.imagenes, ...uploaded]);
     } catch (e: any) {
-      setError(e.message || "No se pudo subir la imagen.");
+      setError(e.message || "No se pudo subir una o más imágenes.");
     } finally {
       setUploadingImg(false);
     }
@@ -237,10 +242,10 @@ function HotelModal({
                   ? <Loader2 className="w-4 h-4 text-[#1D5D8C] animate-spin" />
                   : <ImagePlus className="w-4 h-4" />
                 }
-                {uploadingImg ? "Subiendo..." : "Agregar imagen"}
+                {uploadingImg ? "Subiendo..." : "Agregar imágenes"}
                 <input
-                  type="file" accept="image/*" className="hidden"
-                  onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageUpload(f); }}
+                  type="file" accept="image/*" multiple className="hidden"
+                  onChange={(e) => { if (e.target.files?.length) handleImageUpload(e.target.files); e.target.value = ""; }}
                 />
               </label>
             </div>

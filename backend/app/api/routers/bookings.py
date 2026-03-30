@@ -77,7 +77,13 @@ def create_reserva(
     current_user: User = Depends(get_current_user),
 ):
     auto_approve = current_user.rol == UserRole.ADMIN
-    return crud_booking.create_reserva(db=db, reserva=reserva_in, vendedor_id=current_user.id, auto_approve=auto_approve)
+    # Admin puede asignar la reserva a un vendedor específico
+    effective_vendedor_id = (
+        reserva_in.vendedor_id
+        if (auto_approve and reserva_in.vendedor_id)
+        else current_user.id
+    )
+    return crud_booking.create_reserva(db=db, reserva=reserva_in, vendedor_id=effective_vendedor_id, auto_approve=auto_approve)
 
 
 @router.get("/", response_model=List[Reserva])

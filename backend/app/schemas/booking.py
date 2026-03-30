@@ -39,6 +39,7 @@ class ReservaBase(BaseModel):
 
 class ReservaCreate(ReservaBase):
     pasajeros: List[PasajeroCreate] = []
+    vendedor_id: Optional[int] = None  # Admin puede asignar a un vendedor específico
 
 
 class ReservaUpdate(BaseModel):

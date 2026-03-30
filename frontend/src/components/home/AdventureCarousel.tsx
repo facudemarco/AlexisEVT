@@ -61,7 +61,7 @@ export function AdventureCarousel() {
   };
 
   return (
-    <section className="py-24 bg-[#EFEFEF] relative z-30 flex flex-col items-center w-full px-4 md:px-12">
+    <section id="proxima-aventura" className="py-24 bg-[#EFEFEF] relative z-30 flex flex-col items-center w-full px-4 md:px-12">
       <div className="flex flex-col items-center w-full max-w-[1200px] mx-auto">
         <h4 className="text-[0.85rem] md:text-[1rem] tracking-[0.15em] font-black text-center mb-4 text-gray-900 uppercase">
           Tu próxima aventura
@@ -76,7 +76,7 @@ export function AdventureCarousel() {
           {carouselItems.map((item, index) => (
             <div
               key={index}
-              className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
+              className={`absolute inset-0 transition-opacity duration-500 ease-in-out [will-change:opacity] ${
                 index === currentIndex ? "opacity-100 z-10" : "opacity-0 z-0"
               }`}
             >

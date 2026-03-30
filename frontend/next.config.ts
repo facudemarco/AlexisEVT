@@ -2,6 +2,10 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   images: {
+    // Variantes responsivas: evita servir imágenes 4K donde no hacen falta
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    formats: ["image/webp"],
     remotePatterns: [
       // VPS de producción: imágenes servidas por nginx
       {

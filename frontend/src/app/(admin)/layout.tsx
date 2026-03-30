@@ -33,7 +33,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <video
             src="/resources/hero.mp4"
             autoPlay loop muted playsInline
-            className="absolute inset-0 w-full h-full object-cover opacity-70"
+            preload="metadata"
+            className="absolute inset-0 w-full h-full object-cover opacity-70 [will-change:transform] [transform:translateZ(0)]"
           />
           <div className="absolute inset-0 bg-black/30" />
           <PublicHeader />
