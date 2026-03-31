@@ -11,26 +11,29 @@ export function HeroSection() {
 
   return (
     <section className="relative h-[650px] flex items-center bg-gray-900 overflow-hidden px-8 md:px-24">
-      {/*
-        preload="auto": instruye explícitamente al navegador para descargar el video,
-        mejorando el rendimiento de autoplay en Windows.
-        Usamos <source> para mayor compatibilidad de formatos.
-        poster: muestra la imagen hasta que el primer frame del video está listo,
-        evitando la pantalla negra en mobile e inicio lento.
+      {/* 
+        Background Poster: Shows immediately while Vimeo loads 
       */}
-      <video
-        autoPlay
-        loop
-        muted
-        playsInline
-        preload="auto"
-        poster="/resources/hero_cartelera.png"
-        className="absolute inset-0 w-full h-full object-cover opacity-70 [will-change:transform] [transform:translateZ(0)]"
-        aria-hidden="true"
-      >
-        <source src="/resources/hero.mp4" type="video/mp4" />
-      </video>
-      <div className="absolute inset-0 bg-black/30 z-10" />
+      <div 
+        className="absolute inset-0 bg-cover bg-center opacity-70"
+        style={{ backgroundImage: "url('/resources/hero_cartelera.png')" }}
+      />
+
+      {/* 
+        Vimeo Iframe with Object-Cover Effect:
+        - We make the iframe always 16:9 and at least 100% of the container.
+        - Using transform translate to center it.
+      */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <iframe
+          src="https://player.vimeo.com/video/1178920147?badge=0&autopause=0&player_id=0&app_id=58479&background=1&autoplay=1&loop=1&muted=1"
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[177.77vh] min-w-full min-h-full h-[100%] md:h-[56.25vw] opacity-100"
+          allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share"
+          title="hero-alexis"
+          aria-hidden="true"
+        />
+      </div>
+      <div className="absolute inset-0 bg-black/40 z-10" />
 
       {/* Top Right: login / mi cuenta / panel */}
       <div className="hidden md:block absolute top-8 right-8 md:top-12 md:right-12 z-20">

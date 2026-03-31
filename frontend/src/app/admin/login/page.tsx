@@ -47,30 +47,40 @@ export default function LoginPage() {
     <div className="flex flex-col min-h-screen">
       {/* Header con video de fondo */}
       <div className="relative h-[200px] md:h-[260px] bg-gray-900 overflow-hidden flex-shrink-0">
-        <video
-          src="/resources/hero.mp4"
-          autoPlay
-          loop
-          muted
-          playsInline
-          className="absolute inset-0 w-full h-full object-cover opacity-70"
+        <div 
+          className="absolute inset-0 bg-cover bg-center opacity-70"
+          style={{ backgroundImage: "url('/resources/hero_cartelera.png')" }}
         />
-        <div className="absolute inset-0 bg-black/30" />
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <iframe
+            src="https://player.vimeo.com/video/1178920147?badge=0&autopause=0&player_id=0&app_id=58479&background=1&autoplay=1&loop=1&muted=1"
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[177.77vh] min-w-full min-h-full h-[100%] md:h-[56.25vw] opacity-100"
+            allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share"
+            title="hero-alexis"
+            aria-hidden="true"
+          />
+        </div>
+        <div className="absolute inset-0 bg-black/40" />
         <PublicHeader />
       </div>
 
       {/* Sección del formulario */}
       <main className="flex-1 relative flex flex-col items-center justify-center py-16 px-4">
         {/* Video de fondo muy atenuado */}
-        <video
-          src="/resources/login-bg.mp4"
-          autoPlay
-          loop
-          muted
-          playsInline
-          className="absolute inset-0 w-full h-full object-cover"
+        <div 
+          className="absolute inset-0 bg-cover bg-center"
+          style={{ backgroundImage: "url('/resources/hero_cartelera.png')" }}
         />
-        <div className="absolute inset-0 bg-white/80" />
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <iframe
+            src="https://player.vimeo.com/video/1178921212?badge=0&autopause=0&player_id=0&app_id=58479&background=1&autoplay=1&loop=1&muted=1"
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[177.77vh] min-w-full min-h-full h-[100%] md:h-[56.25vw] opacity-100"
+            allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share"
+            title="login-bg-alexis"
+            aria-hidden="true"
+          />
+        </div>
+        <div className="absolute inset-0 bg-white/70" />
 
         {/* Contenido del formulario */}
         <div className="relative z-10 w-full max-w-2xl flex flex-col items-center gap-8">

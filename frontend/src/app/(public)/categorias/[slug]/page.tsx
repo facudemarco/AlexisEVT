@@ -31,15 +31,20 @@ export default async function CategoryPage({ params }: Params) {
     <div className="min-h-screen flex flex-col relative w-full">
       {/* Top Header Background Video (behind the fixed navbar) */}
       <div className="w-full h-[160px] md:h-[200px] relative flex-shrink-0 overflow-hidden bg-gray-900">
-        <video
-          src="/resources/hero.mp4"
-          autoPlay
-          loop
-          muted
-          playsInline
-          className="absolute inset-0 w-full h-full object-cover"
+        <div 
+          className="absolute inset-0 bg-cover bg-center opacity-70"
+          style={{ backgroundImage: "url('/resources/hero_cartelera.png')" }}
         />
-        <div className="absolute inset-0 bg-black/50" />
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <iframe
+            src="https://player.vimeo.com/video/1178920147?badge=0&autopause=0&player_id=0&app_id=58479&background=1&autoplay=1&loop=1&muted=1"
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[177.77vh] min-w-full min-h-full h-[100%] md:h-[56.25vw] opacity-100"
+            allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share"
+            title="hero-alexis"
+            aria-hidden="true"
+          />
+        </div>
+        <div className="absolute inset-0 bg-black/60" />
       </div>
 
       {/* Main Content Area with faint background image */}

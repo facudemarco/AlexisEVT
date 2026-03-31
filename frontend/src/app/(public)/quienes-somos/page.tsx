@@ -30,15 +30,20 @@ export default function QuienesSomosPage() {
 
       {/* ── Hero con video ─────────────────────────────────────────────────── */}
       <section className="relative h-[480px] md:h-[560px] bg-gray-900 overflow-hidden flex-shrink-0">
-        <video
-          src="/resources/login-bg.mp4"
-          autoPlay
-          loop
-          muted
-          playsInline
-          className="absolute inset-0 w-full h-full object-cover opacity-90"
+        <div 
+          className="absolute inset-0 bg-cover bg-center opacity-90"
+          style={{ backgroundImage: "url('/resources/hero_cartelera.png')" }}
         />
-        <div className="absolute inset-0 bg-black/20" />
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <iframe
+            src="https://player.vimeo.com/video/1178921212?badge=0&autopause=0&player_id=0&app_id=58479&background=1&autoplay=1&loop=1&muted=1"
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[177.77vh] min-w-full min-h-full h-[100%] md:h-[56.25vw] opacity-100"
+            allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share"
+            title="login-bg-alexis"
+            aria-hidden="true"
+          />
+        </div>
+        <div className="absolute inset-0 bg-black/40" />
 
         {/* Título bottom-left */}
         <div className="absolute bottom-10 left-8 md:left-16 z-10">
