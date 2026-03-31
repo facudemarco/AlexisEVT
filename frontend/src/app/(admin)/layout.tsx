@@ -39,6 +39,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               src="https://player.vimeo.com/video/1178920147?badge=0&autopause=0&player_id=0&app_id=58479&background=1&autoplay=1&loop=1&muted=1"
               className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[177.77vh] min-w-full min-h-full h-[100%] md:h-[56.25vw] opacity-100"
               allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share"
+              referrerPolicy="strict-origin-when-cross-origin"
               title="hero-alexis"
               aria-hidden="true"
             />
