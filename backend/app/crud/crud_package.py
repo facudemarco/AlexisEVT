@@ -81,10 +81,10 @@ def create_paquete(db: Session, paquete: PaqueteCreate):
         salidas_diarias=paquete.salidas_diarias,
     )
 
-    # Hotel detalles (association object con régimen y noches)
+    # Hotel detalles (association object con régimen, noches y precio)
     for hd in paquete.hotel_detalles:
         db_paquete.hotel_detalles.append(
-            PaqueteHotel(hotel_id=hd.hotel_id, regimen=hd.regimen, cantidad_noches=hd.cantidad_noches)
+            PaqueteHotel(hotel_id=hd.hotel_id, regimen=hd.regimen, cantidad_noches=hd.cantidad_noches, precio=hd.precio)
         )
 
     # M2M simples
@@ -118,7 +118,7 @@ def update_paquete(db: Session, paquete_id: int, paquete_in: PaqueteUpdate):
         db_paquete.hotel_detalles.clear()
         for hd in hotel_detalles:
             db_paquete.hotel_detalles.append(
-                PaqueteHotel(hotel_id=hd["hotel_id"], regimen=hd.get("regimen"), cantidad_noches=hd.get("cantidad_noches"))
+                PaqueteHotel(hotel_id=hd["hotel_id"], regimen=hd.get("regimen"), cantidad_noches=hd.get("cantidad_noches"), precio=hd.get("precio"))
             )
 
     if transporte_ids is not None:

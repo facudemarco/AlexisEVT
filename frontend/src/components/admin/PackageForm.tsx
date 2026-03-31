@@ -101,12 +101,18 @@ function Select({ value, onChange, children, className }: {
 function Input({ value, onChange, type = "text", placeholder, className }: {
   value: string; onChange: (v: string) => void; type?: string; placeholder?: string; className?: string;
 }) {
+  // type="time" muestra AM/PM en locales en-US; lo reemplazamos con texto
+  // para forzar entrada en formato 24h (HH:MM) sin depender del locale del browser
+  const resolvedType = type === "time" ? "text" : type;
+  const resolvedPlaceholder = type === "time" ? "HH:MM (24hs)" : placeholder;
+
   return (
     <input
-      type={type}
+      type={resolvedType}
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      placeholder={placeholder}
+      placeholder={resolvedPlaceholder}
+      {...(type === "time" ? { pattern: "^([01]\\d|2[0-3]):[0-5]\\d$", maxLength: 5 } : {})}
       className={cn(
         "w-full h-11 px-4 rounded-xl border-2 border-gray-200 bg-white text-base text-gray-800 font-medium",
         "placeholder:text-gray-400 placeholder:font-normal focus:outline-none focus:border-[#1D5D8C] transition-colors",
@@ -267,6 +273,12 @@ export function PackageForm({ initialData, packageId }: Props) {
       : [];
     if (form.alojamiento_activo && hotelesValidos.length === 0) {
       setError("Debés seleccionar al menos un hotel.");
+      return;
+    }
+    // La PK compuesta (paquete_id, hotel_id) en DB impide duplicados — validamos antes de enviar
+    const hotelIds = hotelesValidos.map((h) => h.hotel_id);
+    if (new Set(hotelIds).size !== hotelIds.length) {
+      setError("Hay hoteles duplicados. Cada hotel puede aparecer solo una vez por paquete.");
       return;
     }
     if (!form.alojamiento_activo && !form.precio_base) {
@@ -551,17 +563,32 @@ export function PackageForm({ initialData, packageId }: Props) {
           </div>
           <div className="grid grid-cols-2 gap-5">
             <div>
-              <Label>Horario aprox. de salida</Label>
-              <Input type="time" value={form.horario_salida} onChange={(v) => set("horario_salida", v)} />
+              <Label>Horario aprox. de salida (24hs)</Label>
+              <Input type="time" value={form.horario_salida} onChange={(v) => set("horario_salida", v)} placeholder="HH:MM" />
             </div>
             <div>
-              <Label>Horario aprox. de regreso</Label>
-              <Input type="time" value={form.horario_regreso} onChange={(v) => set("horario_regreso", v)} />
+              <Label>Horario aprox. de regreso (24hs)</Label>
+              <Input type="time" value={form.horario_regreso} onChange={(v) => set("horario_regreso", v)} placeholder="HH:MM" />
             </div>
           </div>
           <div>
             <Label>Lugares de ascenso</Label>
             <div className="border-2 border-gray-200 rounded-xl p-3 space-y-1 max-h-44 overflow-y-auto">
+              {/* Opción "Todos" */}
+              {puntosAscenso.length > 0 && (
+                <label className="flex items-center gap-3 text-base font-bold cursor-pointer hover:bg-gray-50 px-3 py-2 rounded-lg transition-colors border-b border-gray-100 mb-1">
+                  <input
+                    type="checkbox"
+                    checked={form.punto_ascenso_ids.length === puntosAscenso.length}
+                    ref={(el) => {
+                      if (el) el.indeterminate = form.punto_ascenso_ids.length > 0 && form.punto_ascenso_ids.length < puntosAscenso.length;
+                    }}
+                    onChange={(e) => set("punto_ascenso_ids", e.target.checked ? puntosAscenso.map((p) => p.id) : [])}
+                    className="w-4 h-4 accent-[#1D5D8C]"
+                  />
+                  Seleccionar todos los puntos
+                </label>
+              )}
               {puntosAscenso.map((p) => (
                 <label
                   key={p.id}
@@ -638,9 +665,9 @@ export function PackageForm({ initialData, packageId }: Props) {
             <button
               type="button"
               onClick={addHotel}
-              className="flex items-center gap-2 text-sm font-bold text-[#1D5D8C] hover:text-[#164a70] transition-colors"
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-dashed border-[#1D5D8C] text-[#1D5D8C] font-bold hover:bg-[#1D5D8C]/5 transition-colors mt-2"
             >
-              <Plus className="w-4 h-4" /> Agregar otro hotel
+              <Plus className="w-5 h-5" /> Agregar otro hotel (opcional)
             </button>
           </div>
         </SectionCard>
