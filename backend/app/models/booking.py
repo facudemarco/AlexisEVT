@@ -53,3 +53,4 @@ class Reserva(Base):
     vendedor = relationship("User")
     paquete = relationship("Paquete", back_populates="reservas")
     pasajeros = relationship("Pasajero", back_populates="reserva", cascade="all, delete-orphan")
+    liquidacion = relationship("Liquidacion", back_populates="reserva", uselist=False)

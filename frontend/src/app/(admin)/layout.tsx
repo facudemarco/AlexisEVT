@@ -8,15 +8,16 @@ import { useAuth } from "@/components/auth-provider";
 import { PublicHeader } from "@/app/(public)/PublicHeader";
 import { CallToActionBanner } from "@/components/home/CallToActionBanner";
 import { Footer } from "@/components/home/Footer";
-import { Package, Settings, BookOpen, Newspaper, LogOut, Users } from "lucide-react";
+import { Package, Settings, BookOpen, Newspaper, LogOut, Users, Receipt } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NotificationBell } from "@/components/admin/NotificationBell";
 
 const navItems = [
   { href: "/admin/packages",  label: "Paquetes",   icon: Package },
   { href: "/admin/config",    label: "Parámetros", icon: Settings },
-  { href: "/admin/bookings",  label: "Reservas",   icon: BookOpen },
-  { href: "/admin/cartelera", label: "Cartelera",  icon: Newspaper },
+  { href: "/admin/bookings",      label: "Reservas",      icon: BookOpen },
+  { href: "/admin/liquidaciones", label: "Liquidaciones", icon: Receipt },
+  { href: "/admin/cartelera",     label: "Cartelera",     icon: Newspaper },
   { href: "/admin/users",     label: "Usuarios",   icon: Users },
 ];
 

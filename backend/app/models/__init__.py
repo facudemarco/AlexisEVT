@@ -5,3 +5,4 @@ from app.models.package import Paquete, PaqueteHotel, paquete_transporte_table, 
 from app.models.booking import Reserva
 from app.models.board import BoardItem
 from app.models.notification import Notificacion
+from app.models.liquidacion import Liquidacion, LiquidacionItem, Pago
