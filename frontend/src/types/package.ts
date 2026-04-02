@@ -8,6 +8,11 @@ export interface Categoria {
   nombre: string;
 }
 
+export interface Aerolinea {
+  id: number;
+  nombre: string;
+}
+
 export interface Hotel {
   id: number;
   nombre: string;
@@ -63,7 +68,18 @@ export interface Paquete {
   include_asistencia_medica: boolean;
   es_borrador: boolean;
   estado: boolean;
+  horario_salida?: string | null;
+  horario_regreso?: string | null;
+  // Aéreo
+  aereo_incluido: boolean;
+  aereo_aerolinea_id?: number | null;
+  aereo_tipo_servicio?: string | null;
+  aereo_horario_salida?: string | null;
+  aereo_horario_salida_hasta?: string | null;
+  aereo_horario_regreso?: string | null;
   // relaciones
+  aerolinea?: Aerolinea | null;
+  aereo_puntos_ascenso: PuntoAscenso[];
   destino?: Destino;
   categoria?: Categoria;
   hotel_detalles: PaqueteHotelDetalle[];

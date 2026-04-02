@@ -28,7 +28,7 @@ interface Hotel {
   imagenes: string[];
 }
 
-type Tab = "hoteles" | "usuarios" | "destinos" | "transporte" | "lugares";
+type Tab = "hoteles" | "usuarios" | "destinos" | "transporte" | "lugares" | "aerolineas";
 
 // ── Helpers UI ─────────────────────────────────────────────────────────────
 
@@ -1293,12 +1293,167 @@ function LugaresCargaTab({ addTrigger }: { addTrigger: number }) {
   );
 }
 
+// ── Modal Aerolínea ────────────────────────────────────────────────────────
+
+interface AerolineaItem {
+  id: number;
+  nombre: string;
+}
+
+function AerolineaModal({ aerolinea, onSave, onClose }: {
+  aerolinea: AerolineaItem | null;
+  onSave: () => void;
+  onClose: () => void;
+}) {
+  const [nombre, setNombre] = useState(aerolinea?.nombre ?? "");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleSave = async () => {
+    if (!nombre.trim()) { setError("El nombre es obligatorio."); return; }
+    setSaving(true);
+    setError("");
+    try {
+      const body = { nombre };
+      if (aerolinea) {
+        await fetchApi(`/config/aerolineas/${aerolinea.id}`, { method: "PUT", body: JSON.stringify(body) });
+      } else {
+        await fetchApi("/config/aerolineas/", { method: "POST", body: JSON.stringify(body) });
+      }
+      onSave();
+    } catch (e: any) {
+      setError(e.message || "Error al guardar.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const inputClass = "w-full h-11 px-4 rounded-xl border-2 border-gray-200 bg-white text-base text-gray-800 font-medium placeholder:text-gray-400 placeholder:font-normal focus:outline-none focus:border-[#1D5D8C] transition-colors";
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+        <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
+          <h2 className="text-2xl font-black text-gray-900">
+            {aerolinea ? "Editar aerolínea" : "Agregar Aerolínea"}
+          </h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+        <div className="px-6 py-5 space-y-4">
+          <div>
+            <Label>Nombre</Label>
+            <input className={inputClass} value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder="Ej: Aerolíneas Argentinas" />
+          </div>
+          {error && (
+            <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-xl px-4 py-3 font-medium">{error}</p>
+          )}
+        </div>
+        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-100">
+          <button onClick={onClose} className="px-5 py-2.5 rounded-xl border-2 border-gray-200 text-gray-600 font-bold text-sm hover:border-gray-300 transition-colors">
+            Cancelar
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="px-5 py-2.5 rounded-xl bg-[#1D5D8C] text-white font-bold text-sm hover:bg-[#164a70] transition-colors disabled:opacity-60 flex items-center gap-2"
+          >
+            {saving && <Loader2 className="w-4 h-4 animate-spin" />}
+            {aerolinea ? "Guardar cambios" : "Agregar"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Tab Aerolíneas ─────────────────────────────────────────────────────────
+
+function AerolineasTab({ addTrigger }: { addTrigger: number }) {
+  const [aerolineas, setAerolineas] = useState<AerolineaItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [editAerolinea, setEditAerolinea] = useState<AerolineaItem | null | undefined>(undefined);
+
+  const load = () => {
+    setLoading(true);
+    fetchApi("/config/aerolineas/")
+      .then(setAerolineas)
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => { load(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (addTrigger === 0) return;
+    setEditAerolinea(null);
+  }, [addTrigger]);
+
+  const handleDelete = async (id: number) => {
+    if (!confirm("¿Eliminar esta aerolínea?")) return;
+    try {
+      await fetchApi(`/config/aerolineas/${id}`, { method: "DELETE" });
+      load();
+    } catch (e: any) {
+      alert(e.message || "No se puede eliminar la aerolínea. Verifique si está asignada a algún paquete.");
+    }
+  };
+
+  return (
+    <>
+      <div className="overflow-x-auto rounded-xl border border-gray-200 shadow-sm">
+        <table className="w-full text-sm">
+          <thead className="bg-[#1D5D8C] text-white">
+            <tr>
+              <th className="px-5 py-4 text-left font-bold text-base">Nombre de la aerolínea</th>
+              <th className="px-5 py-4 text-center font-bold text-base">Acciones</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-100">
+            {loading && (
+              <tr><td colSpan={2} className="py-12 text-center text-gray-400 text-base">Cargando...</td></tr>
+            )}
+            {!loading && aerolineas.length === 0 && (
+              <tr><td colSpan={2} className="py-12 text-center text-gray-400 text-base">No hay aerolíneas.</td></tr>
+            )}
+            {aerolineas.map((a) => (
+              <tr key={a.id} className="hover:bg-gray-50 transition-colors">
+                <td className="px-5 py-4 font-bold text-gray-900 text-base">{a.nombre}</td>
+                <td className="px-5 py-4">
+                  <div className="flex items-center justify-center gap-4">
+                    <button onClick={() => setEditAerolinea(a)} className="text-gray-400 hover:text-[#1D5D8C] transition-colors" aria-label="Editar">
+                      <Pencil className="w-5 h-5" />
+                    </button>
+                    <button onClick={() => handleDelete(a.id)} className="text-gray-400 hover:text-red-500 transition-colors" aria-label="Eliminar">
+                      <Trash2 className="w-5 h-5" />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {editAerolinea !== undefined && (
+        <AerolineaModal
+          aerolinea={editAerolinea}
+          onSave={() => { setEditAerolinea(undefined); load(); }}
+          onClose={() => setEditAerolinea(undefined)}
+        />
+      )}
+    </>
+  );
+}
+
 // ── Página principal ───────────────────────────────────────────────────────
 
 const TABS: { key: Tab; label: string }[] = [
   { key: "hoteles", label: "Hoteles" },
   { key: "destinos", label: "Destinos" },
   { key: "transporte", label: "Transporte" },
+  { key: "aerolineas", label: "Aerolíneas" },
   { key: "lugares", label: "Lugares de carga" },
 ];
 
@@ -1307,6 +1462,7 @@ const ADD_LABELS: Record<Tab, string> = {
   destinos: "Agregar Destino",
   transporte: "Agregar Empresa de transporte",
   lugares: "Agregar Lugar de carga",
+  aerolineas: "Agregar Aerolínea",
   usuarios: "Agregar Usuario",
 };
 
@@ -1358,6 +1514,7 @@ export default function ConfigAdminPage() {
       {tab === "hoteles" && <HotelesTab addTrigger={addTrigger} />}
       {tab === "destinos" && <DestinosTab addTrigger={addTrigger} />}
       {tab === "transporte" && <TransporteTab addTrigger={addTrigger} />}
+      {tab === "aerolineas" && <AerolineasTab addTrigger={addTrigger} />}
       {tab === "lugares" && <LugaresCargaTab addTrigger={addTrigger} />}
     </div>
   );

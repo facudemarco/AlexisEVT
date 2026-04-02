@@ -54,3 +54,4 @@ router.include_router(dict_router("hoteles", schemas_config.Hotel, schemas_confi
 router.include_router(dict_router("transportes", schemas_config.Transporte, schemas_config.TransporteCreate, models_config.Transporte, crud_config.crud_transporte, schema_update=schemas_config.TransporteUpdate), prefix="/transportes")
 router.include_router(dict_router("servicios", schemas_config.Servicio, schemas_config.ServicioCreate, models_config.Servicio, crud_config.crud_servicio), prefix="/servicios")
 router.include_router(dict_router("puntos_ascenso", schemas_config.PuntoAscenso, schemas_config.PuntoAscensoCreate, models_config.PuntoAscenso, crud_config.crud_punto_ascenso, schema_update=schemas_config.PuntoAscensoUpdate), prefix="/puntos_ascenso")
+router.include_router(dict_router("aerolineas", schemas_config.Aerolinea, schemas_config.AerolineaCreate, models_config.Aerolinea, crud_config.crud_aerolinea), prefix="/aerolineas")

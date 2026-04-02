@@ -2,8 +2,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 from fastapi.staticfiles import StaticFiles
-from slowapi import _rate_limit_exceeded_handler
+from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
+from slowapi.util import get_remote_address
 from app.api.api import api_router
 from app.core.config import settings
 from app.core.limiter import limiter
@@ -37,7 +38,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-app.add_middleware(ProxyHeadersMiddleware, trusted_hosts="*")
+
+# Proxy headers solo en producción (para manejar https detrás de un proxy)
+if not settings.DEBUG:
+    app.add_middleware(ProxyHeadersMiddleware, trusted_hosts=["*"])
 
 app.include_router(api_router, prefix="/api/v1")
 

@@ -50,6 +50,16 @@ export default function EditPackagePage() {
             : [{ hotel_id: "", regimen: "", cantidad_noches: "", precio: "" }],
           include_transfer: pkg.include_transfer ?? false,
           include_asistencia_medica: pkg.include_asistencia_medica ?? false,
+          // Aéreo
+          aereo_activo: pkg.aereo_incluido ?? false,
+          aereo_aerolinea_id: pkg.aereo_aerolinea_id ? String(pkg.aereo_aerolinea_id) : "",
+          aereo_tipo_servicio: pkg.aereo_tipo_servicio ?? "",
+          aereo_horario_salida: pkg.aereo_horario_salida ?? "",
+          aereo_horario_salida_hasta: pkg.aereo_horario_salida_hasta ?? "",
+          aereo_horario_regreso: pkg.aereo_horario_regreso ?? "",
+          aereo_punto_ascenso_ids: Array.isArray(pkg.aereo_puntos_ascenso) 
+            ? pkg.aereo_puntos_ascenso.map((p: any) => p.id) 
+            : [],
         });
       })
       .catch(() => setError(true));

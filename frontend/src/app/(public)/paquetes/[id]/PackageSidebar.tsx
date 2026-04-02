@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Users, ChevronDown, ChevronUp, Loader2, CheckCircle, MessageCircle } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
+import { Users, ChevronDown, ChevronUp, Loader2, CheckCircle, MessageCircle, Clock } from "lucide-react";
 import { Paquete, PuntoAscenso } from "@/types/package";
 import { useAuth } from "@/components/auth-provider";
 import { fetchApi } from "@/lib/api";
@@ -37,7 +37,21 @@ export function PackageSidebar({ paquete }: Props) {
   const isAdmin = isAuthenticated && role === "admin";
   const isPublic = !isAuthenticated;
   const canBooking = isVendedor || isAdmin || isPublic;
-  const puntosAscenso: PuntoAscenso[] = paquete.puntos_ascenso ?? [];
+  
+  // Combinar puntos de ascenso de transporte terrestre y aéreo, asegurando que sean únicos
+  const puntosAscenso = useMemo(() => {
+    const combined = [...(paquete.puntos_ascenso ?? [])];
+    if (paquete.aereo_incluido) {
+      combined.push(...(paquete.aereo_puntos_ascenso ?? []));
+    }
+    // Eliminar duplicados por ID
+    const seen = new Set();
+    return combined.filter((p) => {
+      if (seen.has(p.id)) return false;
+      seen.add(p.id);
+      return true;
+    });
+  }, [paquete.puntos_ascenso, paquete.aereo_puntos_ascenso, paquete.aereo_incluido]);
 
   // Admin: lista de vendedores para asignar la reserva
   const [vendedores, setVendedores] = useState<Vendedor[]>([]);
@@ -74,12 +88,18 @@ export function PackageSidebar({ paquete }: Props) {
   const [expanded, setExpanded] = useState<number>(0); // which accordion is open
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [fechaIda, setFechaIda] = useState<string>("");
 
   const totalPax = adultos + menores;
   const precioTotal = (precioBase + (paquete.precio_adicional ?? 0)) * adultos
     + precioBase * menores;
 
   function goToPassengers() {
+    if (paquete.tipo_salidas === "DIARIAS" && !fechaIda) {
+      setError("Seleccioná una fecha de salida.");
+      return;
+    }
+    setError("");
     const count = totalPax;
     const current = pasajeros.length;
     if (count > current) {
@@ -140,6 +160,7 @@ export function PackageSidebar({ paquete }: Props) {
         pasajeros_adultos: adultos,
         pasajeros_menores: menores,
         precio_total: precioTotal,
+        fecha_salida: paquete.tipo_salidas === "DIARIAS" ? fechaIda : paquete.fecha_salida,
         hotel_id: hotelActual?.hotel_id ?? undefined,
         pasajeros: pasajeros.map((p) => ({
           nombre: p.nombre,
@@ -170,7 +191,12 @@ export function PackageSidebar({ paquete }: Props) {
     const destinoNombre = paquete.destino?.nombre ?? "Sin destino";
     let fechaSalida = "";
     if (paquete.tipo_salidas === "DIARIAS") {
-      fechaSalida = "Salidas diarias";
+      if (fechaIda) {
+        const [y, m, d] = fechaIda.split("-");
+        fechaSalida = `${d}/${m}/${y}`;
+      } else {
+        fechaSalida = "Salidas diarias";
+      }
     } else if (paquete.fecha_salida) {
       const [y, m, d] = paquete.fecha_salida.split("-");
       fechaSalida = `${d}/${m}/${y}`;
@@ -276,6 +302,31 @@ export function PackageSidebar({ paquete }: Props) {
       {/* Step 1 — seleccionar pasajeros */}
       {canBooking && step === "select" && (
         <div className="bg-white rounded-2xl shadow p-6 space-y-4">
+          {paquete.tipo_salidas === "DIARIAS" && (
+            <div className="border-b border-gray-100 pb-4 mb-2">
+              <p className="font-bold text-gray-900 text-sm mb-1 uppercase tracking-tight">Salida todos los dias</p>
+              <p className="text-xs text-gray-500 mb-3 font-semibold">
+                Proxima salida: {new Date().toLocaleDateString('es-AR')}
+              </p>
+              
+              <div className="relative">
+                <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Seleccioná una salida</label>
+                <div className="relative group">
+                  <input
+                    type="date"
+                    value={fechaIda}
+                    onChange={(e) => setFechaIda(e.target.value)}
+                    min={new Date().toISOString().split('T')[0]}
+                    className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#1D5D8C] focus:border-transparent transition-all cursor-pointer text-gray-700 font-medium"
+                  />
+                  <div className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none">
+                    <Clock className="w-4 h-4 text-gray-400 group-focus-within:text-[#1D5D8C]" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           <p className="font-bold text-gray-800 text-sm">Pasajeros</p>
 
           <div className="flex items-center justify-between">

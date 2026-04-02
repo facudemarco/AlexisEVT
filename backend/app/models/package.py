@@ -27,6 +27,12 @@ paquete_punto_ascenso_table = Table(
     Column("punto_id", Integer, ForeignKey("puntos_ascenso.id", ondelete="CASCADE"), primary_key=True)
 )
 
+paquete_aereo_punto_ascenso_table = Table(
+    "paquetes_aereo_puntoascenso", Base.metadata,
+    Column("paquete_id", Integer, ForeignKey("paquetes.id", ondelete="CASCADE"), primary_key=True),
+    Column("punto_id", Integer, ForeignKey("puntos_ascenso.id", ondelete="CASCADE"), primary_key=True)
+)
+
 
 class PaqueteHotel(Base):
     """Junction table paquete↔hotel con atributos extra (régimen, noches, precio)."""
@@ -68,8 +74,8 @@ class Paquete(Base):
     transporte_incluido = Column(Boolean, default=False)
     transporte_empresa = Column(String(150), nullable=True)
     transporte_tipo = Column(String(100), nullable=True)
-    horario_salida = Column(Time, nullable=True)
-    horario_regreso = Column(Time, nullable=True)
+    horario_salida = Column(String(100), nullable=True)
+    horario_regreso = Column(String(100), nullable=True)
     alojamiento_incluido = Column(Boolean, default=True)
     alojamiento_noches = Column(Integer, nullable=True)
     include_transfer = Column(Boolean, default=True)
@@ -79,6 +85,14 @@ class Paquete(Base):
     created_at = Column(Date, nullable=True)
     deleted_at = Column(Date, nullable=True)
 
+    # Aéreo
+    aereo_incluido = Column(Boolean, default=False)
+    aereo_aerolinea_id = Column(Integer, ForeignKey("aerolineas.id"), nullable=True)
+    aereo_tipo_servicio = Column(String(100), nullable=True)
+    aereo_horario_salida = Column(String(100), nullable=True)
+    aereo_horario_salida_hasta = Column(String(100), nullable=True)
+    aereo_horario_regreso = Column(String(100), nullable=True)
+
     # Relationships
     destino = relationship("Destino")
     categoria = relationship("Categoria")
@@ -86,5 +100,7 @@ class Paquete(Base):
     transportes = relationship("Transporte", secondary=paquete_transporte_table)
     servicios = relationship("Servicio", secondary=paquete_servicio_table)
     puntos_ascenso = relationship("PuntoAscenso", secondary=paquete_punto_ascenso_table)
+    aereo_puntos_ascenso = relationship("PuntoAscenso", secondary=paquete_aereo_punto_ascenso_table)
+    aerolinea = relationship("Aerolinea")
 
     reservas = relationship("Reserva", back_populates="paquete")

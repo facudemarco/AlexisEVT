@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import {
-  MapPin, Bus, Truck, BedDouble, Users, HeartPulse, Clock,
+  MapPin, Bus, Plane, Truck, BedDouble, Users, HeartPulse, Clock,
 } from "lucide-react";
 import { Paquete } from "@/types/package";
 import { PackageSidebar } from "./PackageSidebar";
@@ -38,7 +38,7 @@ function ServiceBlock({
 }: {
   icon: React.ReactNode;
   title: string;
-  right?: string;
+  right?: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
@@ -48,7 +48,7 @@ function ServiceBlock({
           {icon}
           {title}
         </span>
-        {right && <span className="text-sm font-semibold">{right}</span>}
+        {right && <div>{right}</div>}
       </div>
       <div className="border border-gray-200 rounded-b-xl p-4 bg-white">{children}</div>
     </div>
@@ -162,21 +162,68 @@ export default async function PackageDetailPage({
                       <Bus className="w-4 h-4 text-gray-400 flex-shrink-0" />
                       Empresa: <strong>{primerTransporte.nombre || "A confirmar"}</strong>
                     </p>
-                    {(primerTransporte.horario_salida_desde || primerTransporte.horario_salida_hasta) && (
+                    {paquete.horario_salida && paquete.horario_salida !== "00:00" && (
                       <p className="flex items-center gap-2">
                         <Clock className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                        Rango aproximado de Horario de ida:{" "}
-                        <strong>
-                          {primerTransporte.horario_salida_desde ?? "—"} /{" "}
-                          {primerTransporte.horario_salida_hasta ?? "—"} hs
-                        </strong>
+                        Horario aproximado de ida:{" "}
+                        <strong>{paquete.horario_salida} hs</strong>
                       </p>
                     )}
-                    {primerTransporte.horario_regreso && (
+                    {paquete.horario_regreso && paquete.horario_regreso !== "00:00" && (
                       <p className="flex items-center gap-2">
                         <Clock className="w-4 h-4 text-gray-400 flex-shrink-0" />
                         Horario aproximado de regreso:{" "}
-                        <strong>{primerTransporte.horario_regreso} hs</strong>
+                        <strong>{paquete.horario_regreso} hs</strong>
+                      </p>
+                    )}
+                  </div>
+                </ServiceBlock>
+              )}
+
+              {/* Aéreo */}
+              {paquete.aereo_incluido && (
+                <ServiceBlock
+                  icon={<Plane className="w-4 h-4" />}
+                  title={`Transporte en Aéreo a ${paquete.destino?.nombre ?? ""}`}
+                  right={
+                    paquete.aereo_tipo_servicio ? (
+                      <div className="flex items-center gap-3 pr-4 h-full">
+                        <span className="text-sm font-semibold">{paquete.aereo_tipo_servicio}</span>
+                        <div className="flex items-center justify-center flex-shrink-0">
+                          <img 
+                            src="/resources/vector-avion.png" 
+                            alt="Avión" 
+                            style={{ 
+                              width: '24px', 
+                              height: '24px', 
+                              objectFit: 'contain',
+                              display: 'block'
+                            }}
+                          />
+                        </div>
+                      </div>
+                    ) : undefined
+                  }
+                >
+                  <div className="space-y-2 text-sm text-gray-700">
+                    <p className="flex items-center gap-2">
+                      <Plane className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                      Aerolínea: <strong>{paquete.aerolinea?.nombre || "A confirmar"}</strong>
+                    </p>
+                    {paquete.aereo_horario_salida && paquete.aereo_horario_salida !== "00:00" && (
+                      <p className="flex items-center gap-2">
+                        <Clock className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                        Rango aproximado de Horario aproximado de ida: <strong>
+                          {paquete.aereo_horario_salida} 
+                          {paquete.aereo_horario_salida_hasta && paquete.aereo_horario_salida_hasta !== "00:00" ? ` / ${paquete.aereo_horario_salida_hasta}` : ""} 
+                          hs
+                        </strong>
+                      </p>
+                    )}
+                    {paquete.aereo_horario_regreso && paquete.aereo_horario_regreso !== "00:00" && (
+                      <p className="flex items-center gap-2">
+                        <Clock className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                        Horario aproximado de regreso: <strong>{paquete.aereo_horario_regreso} hs</strong>
                       </p>
                     )}
                   </div>
@@ -285,6 +332,26 @@ export default async function PackageDetailPage({
                     </p>
                     <ul className="ml-6 space-y-1 list-disc">
                       {paquete.puntos_ascenso.map((p) => (
+                        <li key={p.id}>{p.nombre_lugar}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </ServiceBlock>
+              )}
+
+              {/* Lugares de ascenso Aéreo */}
+              {paquete.aereo_incluido && paquete.aereo_puntos_ascenso && paquete.aereo_puntos_ascenso.length > 0 && (
+                <ServiceBlock
+                  icon={<Users className="w-4 h-4" />}
+                  title="Lugares de ascenso (Aéreo)"
+                >
+                  <div className="text-sm text-gray-700">
+                    <p className="flex items-center gap-2 mb-2 font-medium">
+                      <Users className="w-4 h-4 text-gray-400" />
+                      Puntos de encuentro para el aéreo:
+                    </p>
+                    <ul className="ml-6 space-y-1 list-disc">
+                      {paquete.aereo_puntos_ascenso.map((p) => (
                         <li key={p.id}>{p.nombre_lugar}</li>
                       ))}
                     </ul>

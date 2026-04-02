@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
 from datetime import date, time
-from app.schemas.config import Destino, Categoria, Hotel, Transporte, Servicio, PuntoAscenso
+from app.schemas.config import Destino, Categoria, Hotel, Transporte, Servicio, PuntoAscenso, Aerolinea
 
 
 # --- PaqueteHotel (junction con atributos) ---
@@ -52,10 +52,17 @@ class PaqueteBase(BaseModel):
     transporte_incluido: Optional[bool] = None
     transporte_empresa: Optional[str] = None
     transporte_tipo: Optional[str] = None
-    horario_salida: Optional[time] = None
-    horario_regreso: Optional[time] = None
+    horario_salida: Optional[str] = None
+    horario_regreso: Optional[str] = None
     alojamiento_incluido: Optional[bool] = None
     alojamiento_noches: Optional[int] = None
+
+    aereo_incluido: bool = False
+    aereo_aerolinea_id: Optional[int] = None
+    aereo_tipo_servicio: Optional[str] = None
+    aereo_horario_salida: Optional[str] = None
+    aereo_horario_salida_hasta: Optional[str] = None
+    aereo_horario_regreso: Optional[str] = None
 
 
 class PaqueteCreate(PaqueteBase):
@@ -63,6 +70,7 @@ class PaqueteCreate(PaqueteBase):
     transporte_ids: List[int] = []
     servicio_ids: List[int] = []
     punto_ascenso_ids: List[int] = []
+    aereo_punto_ascenso_ids: List[int] = []
 
 
 class PaqueteUpdate(BaseModel):
@@ -92,14 +100,21 @@ class PaqueteUpdate(BaseModel):
     transporte_incluido: Optional[bool] = None
     transporte_empresa: Optional[str] = None
     transporte_tipo: Optional[str] = None
-    horario_salida: Optional[time] = None
-    horario_regreso: Optional[time] = None
+    horario_salida: Optional[str] = None
+    horario_regreso: Optional[str] = None
     alojamiento_incluido: Optional[bool] = None
     alojamiento_noches: Optional[int] = None
+    aereo_incluido: Optional[bool] = None
+    aereo_aerolinea_id: Optional[int] = None
+    aereo_tipo_servicio: Optional[str] = None
+    aereo_horario_salida: Optional[str] = None
+    aereo_horario_salida_hasta: Optional[str] = None
+    aereo_horario_regreso: Optional[str] = None
     hotel_detalles: Optional[List[PaqueteHotelDetalleCreate]] = None
     transporte_ids: Optional[List[int]] = None
     servicio_ids: Optional[List[int]] = None
     punto_ascenso_ids: Optional[List[int]] = None
+    aereo_punto_ascenso_ids: Optional[List[int]] = None
 
 
 class PaqueteInDBBase(PaqueteBase):
@@ -110,6 +125,8 @@ class PaqueteInDBBase(PaqueteBase):
     transportes: List[Transporte] = []
     servicios: List[Servicio] = []
     puntos_ascenso: List[PuntoAscenso] = []
+    aereo_puntos_ascenso: List[PuntoAscenso] = []
+    aerolinea: Optional[Aerolinea] = None
 
     class Config:
         from_attributes = True

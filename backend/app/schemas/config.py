@@ -93,3 +93,15 @@ class PuntoAscensoUpdate(BaseModel):
     horario_default: Optional[str] = None
 
 
+class Aerolinea(ConfigItemInDBBase):
+    pass
+
+
+class AerolineaCreate(ConfigItemCreate):
+    pass
+
+
+class AerolineaUpdate(ConfigItemBase):
+    pass
+
+

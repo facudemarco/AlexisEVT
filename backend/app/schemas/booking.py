@@ -35,6 +35,7 @@ class ReservaBase(BaseModel):
     pasajeros_adultos: int = 1
     pasajeros_menores: int = 0
     precio_total: float
+    fecha_salida: Optional[date] = None
 
 
 class ReservaCreate(ReservaBase):
@@ -45,6 +46,7 @@ class ReservaCreate(ReservaBase):
 class ReservaUpdate(BaseModel):
     estado_reserva: ReservaStatus
     motivo_rechazo: Optional[str] = None
+    fecha_salida: Optional[date] = None
 
 
 class ReservaInDBBase(ReservaBase):

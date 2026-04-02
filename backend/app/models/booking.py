@@ -46,7 +46,7 @@ class Reserva(Base):
     )
     motivo_rechazo = Column(Text, nullable=True)
     precio_total = Column(Float, nullable=False)
-
+    fecha_salida = Column(Date, nullable=True) # Para salidas diarias, guardar el día exacto
     fecha_creacion = Column(DateTime(timezone=True), server_default=func.now())
 
     # Relationships

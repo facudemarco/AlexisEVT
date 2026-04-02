@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { fetchApi } from "@/lib/api";
-import { Plus, Minus, Loader2, ChevronDown, Bus, Hotel, ImagePlus, X } from "lucide-react";
+import { Plus, Minus, Loader2, ChevronDown, Bus, Plane, Hotel, ImagePlus, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // ── Tipos ──────────────────────────────────────────────────────────────────
@@ -50,6 +50,14 @@ interface FormState {
   hotel_detalles: HotelDetalle[];
   include_transfer: boolean;
   include_asistencia_medica: boolean;
+  // Aéreo
+  aereo_activo: boolean;
+  aereo_aerolinea_id: string;
+  aereo_tipo_servicio: string;
+  aereo_horario_salida: string;
+  aereo_horario_salida_hasta: string;
+  aereo_horario_regreso: string;
+  aereo_punto_ascenso_ids: number[];
 }
 
 const EMPTY_HOTEL: HotelDetalle = { hotel_id: "", regimen: "", cantidad_noches: "", precio: "" };
@@ -69,6 +77,8 @@ const EMPTY: FormState = {
   punto_ascenso_ids: [],
   alojamiento_activo: false, hotel_detalles: [{ ...EMPTY_HOTEL }],
   include_transfer: false, include_asistencia_medica: false,
+  aereo_activo: false, aereo_aerolinea_id: "", aereo_tipo_servicio: "",
+  aereo_horario_salida: "", aereo_horario_salida_hasta: "", aereo_horario_regreso: "", aereo_punto_ascenso_ids: [],
 };
 
 // ── Helpers UI ─────────────────────────────────────────────────────────────
@@ -278,6 +288,7 @@ export function PackageForm({ initialData, packageId }: Props) {
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [hoteles, setHoteles] = useState<Hotel[]>([]);
   const [transportes, setTransportes] = useState<Transporte[]>([]);
+  const [aerolineas, setAerolineas] = useState<ConfigItem[]>([]);
   const [puntosAscenso, setPuntosAscenso] = useState<PuntoAscenso[]>([]);
 
   useEffect(() => {
@@ -286,10 +297,11 @@ export function PackageForm({ initialData, packageId }: Props) {
       fetchApi("/config/categorias/"),
       fetchApi("/config/hoteles/"),
       fetchApi("/config/transportes/"),
+      fetchApi("/config/aerolineas/"),
       fetchApi("/config/puntos_ascenso/"),
-    ]).then(([d, c, h, t, p]) => {
+    ]).then(([d, c, h, t, a, p]) => {
       setDestinos(d); setCategorias(c); setHoteles(h);
-      setTransportes(t); setPuntosAscenso(p);
+      setTransportes(t); setAerolineas(a); setPuntosAscenso(p);
     }).catch(() => {});
   }, []);
 
@@ -338,6 +350,13 @@ export function PackageForm({ initialData, packageId }: Props) {
       ? form.punto_ascenso_ids.filter((x) => x !== id)
       : [...form.punto_ascenso_ids, id];
     set("punto_ascenso_ids", ids);
+  };
+
+  const togglePuntoAereo = (id: number) => {
+    const ids = form.aereo_punto_ascenso_ids.includes(id)
+      ? form.aereo_punto_ascenso_ids.filter((x) => x !== id)
+      : [...form.aereo_punto_ascenso_ids, id];
+    set("aereo_punto_ascenso_ids", ids);
   };
 
   const handleSubmit = async (esDraft: boolean) => {
@@ -409,6 +428,13 @@ export function PackageForm({ initialData, packageId }: Props) {
         transporte_tipo: form.transporte_activo ? form.transporte_tipo : null,
         transporte_ids: form.transporte_activo && form.transporte_id ? [Number(form.transporte_id)] : [],
         punto_ascenso_ids: form.punto_ascenso_ids,
+        aereo_incluido: form.aereo_activo,
+        aereo_aerolinea_id: form.aereo_activo && form.aereo_aerolinea_id ? Number(form.aereo_aerolinea_id) : null,
+        aereo_tipo_servicio: form.aereo_activo ? form.aereo_tipo_servicio : null,
+        aereo_horario_salida: form.aereo_activo ? form.aereo_horario_salida : null,
+        aereo_horario_salida_hasta: form.aereo_activo ? form.aereo_horario_salida_hasta : null,
+        aereo_horario_regreso: form.aereo_activo ? form.aereo_horario_regreso : null,
+        aereo_punto_ascenso_ids: form.aereo_activo ? form.aereo_punto_ascenso_ids : [],
         servicio_ids: [],
       };
 
@@ -426,6 +452,7 @@ export function PackageForm({ initialData, packageId }: Props) {
   };
 
   const tiposTransporte = ["Bus Semicama", "Bus Cama", "Aéreo", "Minibús", "Otro"];
+  const tiposServicioAereo = ["Economy", "Business", "Primera clase"];
   const regimenes = ["Solo alojamiento", "Alojamiento y desayuno", "Media pensión", "Pensión completa", "Todo incluido"];
 
   return (
@@ -679,6 +706,82 @@ export function PackageForm({ initialData, packageId }: Props) {
                     type="checkbox"
                     checked={form.punto_ascenso_ids.includes(p.id)}
                     onChange={() => togglePunto(p.id)}
+                    className="w-4 h-4 accent-[#1D5D8C]"
+                  />
+                  {p.nombre_lugar}
+                </label>
+              ))}
+              {puntosAscenso.length === 0 && (
+                <p className="text-sm text-gray-400 px-2 py-1">No hay puntos cargados en parámetros.</p>
+              )}
+            </div>
+          </div>
+        </SectionCard>
+
+        {/* ── Transporte Aéreo ── */}
+        <SectionCard
+          icon={<Plane className="w-5 h-5" />}
+          title="Transporte en Aéreo"
+          activo={form.aereo_activo}
+          onToggle={(v) => set("aereo_activo", v)}
+        >
+          <div className="grid grid-cols-2 gap-5">
+            <div>
+              <Label>Aerolínea</Label>
+              <Select value={form.aereo_aerolinea_id} onChange={(v) => set("aereo_aerolinea_id", v)}>
+                <option value="">Seleccionar aerolínea</option>
+                {aerolineas.map((a) => <option key={a.id} value={a.id}>{a.nombre}</option>)}
+              </Select>
+            </div>
+            <div>
+              <Label>Tipo de servicio</Label>
+              <Select value={form.aereo_tipo_servicio} onChange={(v) => set("aereo_tipo_servicio", v)}>
+                <option value="">Seleccionar</option>
+                {tiposServicioAereo.map((t) => <option key={t} value={t}>{t}</option>)}
+              </Select>
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-5">
+            <div>
+              <Label>Horario salida DESDE</Label>
+              <TimeInput value={form.aereo_horario_salida} onChange={(v) => set("aereo_horario_salida", v)} />
+            </div>
+            <div>
+              <Label>Horario salida HASTA</Label>
+              <TimeInput value={form.aereo_horario_salida_hasta} onChange={(v) => set("aereo_horario_salida_hasta", v)} />
+            </div>
+            <div>
+              <Label>Horario de regreso</Label>
+              <TimeInput value={form.aereo_horario_regreso} onChange={(v) => set("aereo_horario_regreso", v)} />
+            </div>
+          </div>
+          <div>
+            <Label>Lugares de ascenso</Label>
+            <div className="border-2 border-gray-200 rounded-xl p-3 space-y-1 max-h-44 overflow-y-auto">
+              {/* Opción "Todos" */}
+              {puntosAscenso.length > 0 && (
+                <label className="flex items-center gap-3 text-base font-bold cursor-pointer hover:bg-gray-50 px-3 py-2 rounded-lg transition-colors border-b border-gray-100 mb-1">
+                  <input
+                    type="checkbox"
+                    checked={form.aereo_punto_ascenso_ids.length === puntosAscenso.length}
+                    ref={(el) => {
+                      if (el) el.indeterminate = form.aereo_punto_ascenso_ids.length > 0 && form.aereo_punto_ascenso_ids.length < puntosAscenso.length;
+                    }}
+                    onChange={(e) => set("aereo_punto_ascenso_ids", e.target.checked ? puntosAscenso.map((p) => p.id) : [])}
+                    className="w-4 h-4 accent-[#1D5D8C]"
+                  />
+                  Seleccionar todos los puntos
+                </label>
+              )}
+              {puntosAscenso.map((p) => (
+                <label
+                  key={p.id}
+                  className="flex items-center gap-3 text-base font-medium cursor-pointer hover:bg-gray-50 px-3 py-2 rounded-lg transition-colors"
+                >
+                  <input
+                    type="checkbox"
+                    checked={form.aereo_punto_ascenso_ids.includes(p.id)}
+                    onChange={() => togglePuntoAereo(p.id)}
                     className="w-4 h-4 accent-[#1D5D8C]"
                   />
                   {p.nombre_lugar}
