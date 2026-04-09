@@ -49,8 +49,11 @@ class Reserva(Base):
     fecha_salida = Column(Date, nullable=True) # Para salidas diarias, guardar el día exacto
     fecha_creacion = Column(DateTime(timezone=True), server_default=func.now())
 
+    hotel_id = Column(Integer, ForeignKey("hoteles.id"), nullable=True)
+
     # Relationships
     vendedor = relationship("User")
     paquete = relationship("Paquete", back_populates="reservas")
+    hotel = relationship("Hotel")
     pasajeros = relationship("Pasajero", back_populates="reserva", cascade="all, delete-orphan")
     liquidacion = relationship("Liquidacion", back_populates="reserva", uselist=False)

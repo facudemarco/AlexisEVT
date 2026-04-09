@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import asc
 from typing import Optional
 from app.models.booking import Reserva, Pasajero, ReservaStatus
-from app.schemas.booking import ReservaCreate
+from app.schemas.booking import ReservaCreate, ReservaFullUpdate
 
 
 def get_reserva(db: Session, reserva_id: int):
@@ -47,6 +47,7 @@ def create_reserva(db: Session, reserva: ReservaCreate, vendedor_id: int, auto_a
     db_reserva = Reserva(
         vendedor_id=vendedor_id,
         paquete_id=reserva.paquete_id,
+        hotel_id=reserva.hotel_id,
         cliente_nombre=reserva.cliente_nombre,
         cliente_email=reserva.cliente_email,
         cliente_telefono=reserva.cliente_telefono,
@@ -54,6 +55,7 @@ def create_reserva(db: Session, reserva: ReservaCreate, vendedor_id: int, auto_a
         pasajeros_menores=reserva.pasajeros_menores,
         precio_total=reserva.precio_total,
         estado_reserva=estado,
+        fecha_salida=reserva.fecha_salida,
     )
     db.add(db_reserva)
     db.flush()
@@ -83,4 +85,52 @@ def update_reserva_estado(db: Session, reserva_id: int, nuevo_estado: str, motiv
             reserva.motivo_rechazo = motivo
         db.commit()
         db.refresh(reserva)
+    return reserva
+
+
+def update_reserva_full(db: Session, reserva_id: int, data: ReservaFullUpdate):
+    reserva = get_reserva(db, reserva_id)
+    if not reserva:
+        return None
+
+    if data.paquete_id is not None:
+        reserva.paquete_id = data.paquete_id
+    if data.hotel_id is not None:
+        reserva.hotel_id = data.hotel_id
+    if data.vendedor_id is not None:
+        reserva.vendedor_id = data.vendedor_id
+    if data.cliente_nombre is not None:
+        reserva.cliente_nombre = data.cliente_nombre
+    if data.cliente_email is not None:
+        reserva.cliente_email = data.cliente_email
+    if data.cliente_telefono is not None:
+        reserva.cliente_telefono = data.cliente_telefono
+    if data.pasajeros_adultos is not None:
+        reserva.pasajeros_adultos = data.pasajeros_adultos
+    if data.pasajeros_menores is not None:
+        reserva.pasajeros_menores = data.pasajeros_menores
+    if data.precio_total is not None:
+        reserva.precio_total = data.precio_total
+    if data.fecha_salida is not None:
+        reserva.fecha_salida = data.fecha_salida
+
+    if data.pasajeros is not None:
+        # Replace all passengers
+        for p in reserva.pasajeros:
+            db.delete(p)
+        db.flush()
+        for p in data.pasajeros:
+            db_pasajero = Pasajero(
+                reserva_id=reserva.id,
+                nombre=p.nombre,
+                apellido=p.apellido,
+                dni=p.dni,
+                fecha_nacimiento=p.fecha_nacimiento,
+                telefono=p.telefono,
+                punto_ascenso_id=p.punto_ascenso_id,
+            )
+            db.add(db_pasajero)
+
+    db.commit()
+    db.refresh(reserva)
     return reserva

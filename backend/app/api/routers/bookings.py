@@ -7,7 +7,7 @@ import io
 
 from app.api.deps import get_db
 from app.api.deps_security import get_current_user, get_current_admin_user
-from app.schemas.booking import Reserva, ReservaCreate
+from app.schemas.booking import Reserva, ReservaCreate, ReservaFullUpdate
 from app.models.user import User, UserRole
 from app.models.notification import Notificacion
 from app.crud import crud_booking
@@ -124,5 +124,19 @@ def update_estado(
     # Notificar al vendedor
     _notify(db, updated, body.estado, motivo=body.motivo or "")
 
+    return updated
+
+
+@router.put("/{reserva_id}", response_model=Reserva)
+def update_reserva_full(
+    reserva_id: int,
+    body: ReservaFullUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_admin_user),
+):
+    reserva = crud_booking.get_reserva(db, reserva_id)
+    if not reserva:
+        raise HTTPException(status_code=404, detail="Reserva no encontrada")
+    updated = crud_booking.update_reserva_full(db, reserva_id, body)
     return updated
 

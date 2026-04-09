@@ -4,6 +4,7 @@ from datetime import datetime, date
 from app.models.booking import ReservaStatus
 from app.schemas.package import Paquete
 from app.schemas.user import User
+from app.schemas.config import Hotel
 
 
 class PasajeroBase(BaseModel):
@@ -29,6 +30,7 @@ class Pasajero(PasajeroBase):
 
 class ReservaBase(BaseModel):
     paquete_id: int
+    hotel_id: Optional[int] = None
     cliente_nombre: Optional[str] = None
     cliente_email: Optional[str] = None
     cliente_telefono: Optional[str] = None
@@ -49,6 +51,20 @@ class ReservaUpdate(BaseModel):
     fecha_salida: Optional[date] = None
 
 
+class ReservaFullUpdate(BaseModel):
+    paquete_id: Optional[int] = None
+    hotel_id: Optional[int] = None
+    vendedor_id: Optional[int] = None
+    cliente_nombre: Optional[str] = None
+    cliente_email: Optional[str] = None
+    cliente_telefono: Optional[str] = None
+    pasajeros_adultos: Optional[int] = None
+    pasajeros_menores: Optional[int] = None
+    precio_total: Optional[float] = None
+    fecha_salida: Optional[date] = None
+    pasajeros: Optional[List[PasajeroCreate]] = None
+
+
 class ReservaInDBBase(ReservaBase):
     id: int
     vendedor_id: Optional[int] = None
@@ -63,4 +79,5 @@ class ReservaInDBBase(ReservaBase):
 class Reserva(ReservaInDBBase):
     vendedor: Optional[User] = None
     paquete: Optional[Paquete] = None
+    hotel: Optional[Hotel] = None
     pasajeros: List[Pasajero] = []

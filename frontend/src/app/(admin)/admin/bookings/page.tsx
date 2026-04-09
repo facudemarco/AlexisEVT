@@ -16,6 +16,7 @@ import {
   ArrowDown,
   Plus,
   Users,
+  Pencil,
 } from "lucide-react";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -31,10 +32,43 @@ interface Pasajero {
   telefono?: string;
 }
 
+interface HotelDetalle {
+  hotel_id: number;
+  hotel?: { id: number; nombre: string };
+  regimen?: string;
+  cantidad_noches?: number;
+  precio?: number;
+}
+
+interface PuntoAscenso {
+  id: number;
+  nombre_lugar: string;
+}
+
+interface PaqueteDetalle {
+  id: number;
+  titulo_subtitulo: string;
+  fecha_salida?: string;
+  fecha_regreso?: string;
+  duracion_dias: number;
+  duracion_noches: number;
+  precio_base: number;
+  precio_adicional?: number;
+  moneda?: string;
+  periodo?: string;
+  tipo_salidas?: string;
+  aereo_incluido?: boolean;
+  destino?: { id: number; nombre: string; sigla?: string };
+  hotel_detalles?: HotelDetalle[];
+  puntos_ascenso?: PuntoAscenso[];
+  aereo_puntos_ascenso?: PuntoAscenso[];
+}
+
 interface Reserva {
   id: number;
   vendedor_id: number;
   paquete_id: number;
+  hotel_id?: number;
   cliente_nombre?: string;
   cliente_email?: string;
   cliente_telefono?: string;
@@ -43,21 +77,11 @@ interface Reserva {
   estado_reserva: ReservaStatus;
   motivo_rechazo?: string;
   precio_total: number;
+  fecha_salida?: string;
   fecha_creacion: string;
   vendedor?: { id: number; nombre: string; email: string; nombre_sistema?: string };
-  paquete?: {
-    id: number;
-    titulo_subtitulo: string;
-    fecha_salida?: string;
-    fecha_regreso?: string;
-    duracion_dias: number;
-    duracion_noches: number;
-    precio_base: number;
-    moneda?: string;
-    periodo?: string;
-    destino?: { id: number; nombre: string; sigla?: string };
-    hotel_detalles?: { hotel?: { nombre: string }; regimen?: string; cantidad_noches?: number }[];
-  };
+  hotel?: { id: number; nombre: string };
+  paquete?: PaqueteDetalle;
   pasajeros: Pasajero[];
 }
 
@@ -123,10 +147,11 @@ function FilterSelect({ label, value, onChange, children }: {
 
 type ModalView = "detail" | "reject" | "cancel" | "revert";
 
-function DetailModal({ reserva, onClose, onUpdate }: {
+function DetailModal({ reserva, onClose, onUpdate, onEdit }: {
   reserva: Reserva;
   onClose: () => void;
   onUpdate: (updated: Reserva) => void;
+  onEdit: () => void;
 }) {
   const [view, setView] = useState<ModalView>("detail");
   const [motivo, setMotivo] = useState("");
@@ -158,7 +183,11 @@ function DetailModal({ reserva, onClose, onUpdate }: {
 
   const p = reserva.paquete;
   const destino = p?.destino?.nombre ?? "—";
-  const hotel = p?.hotel_detalles?.[0]?.hotel?.nombre ?? "—";
+  // Mostrar el hotel seleccionado en la reserva, o el primero del paquete como fallback
+  const hotelNombre = reserva.hotel?.nombre
+    ?? p?.hotel_detalles?.find((d) => d.hotel_id === reserva.hotel_id)?.hotel?.nombre
+    ?? p?.hotel_detalles?.[0]?.hotel?.nombre
+    ?? "—";
   const isAprobada = reserva.estado_reserva === "Aprobada";
   const isPendiente = reserva.estado_reserva === "Pendiente";
   const isRechazada = reserva.estado_reserva === "Rechazada";
@@ -212,8 +241,8 @@ function DetailModal({ reserva, onClose, onUpdate }: {
                       {String(p?.duracion_dias ?? "—").padStart(2, "0")} días, {String(p?.duracion_noches ?? "—").padStart(2, "0")} noches
                     </p>
                   )}
-                  {hotel !== "—" && (
-                    <p className="text-sm text-gray-600">Hotel {hotel}</p>
+                  {hotelNombre !== "—" && (
+                    <p className="text-sm text-gray-600">Hotel {hotelNombre}</p>
                   )}
                   <p className="text-sm font-bold text-gray-800">
                     ${reserva.precio_total?.toLocaleString("es-AR")}.-
@@ -321,7 +350,18 @@ function DetailModal({ reserva, onClose, onUpdate }: {
         </div>
 
         {/* Footer actions */}
-        <div className="px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
+        <div className="px-6 py-4 border-t border-gray-200 flex justify-between gap-3">
+          {view === "detail" && (
+            <button
+              onClick={onEdit}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl border-2 border-[#1D5D8C] text-[#1D5D8C] font-bold text-sm hover:bg-[#1D5D8C]/5 transition-colors"
+            >
+              <Pencil className="w-4 h-4" />
+              Modificar
+            </button>
+          )}
+          {view !== "detail" && <div />}
+          <div className="flex gap-3">
           {view === "detail" && (
             <>
               {isPendiente && (
@@ -406,6 +446,7 @@ function DetailModal({ reserva, onClose, onUpdate }: {
               Confirmar
             </button>
           )}
+          </div>
         </div>
 
         {/* Floating Toast */}
@@ -422,12 +463,344 @@ function DetailModal({ reserva, onClose, onUpdate }: {
   );
 }
 
+// ─── Edit Booking Modal ───────────────────────────────────────────────────────
+
+interface VendedorOption { id: number; nombre: string; nombre_sistema?: string; }
+interface PaxForm { nombre: string; apellido: string; dni: string; fecha_nacimiento: string; telefono: string; punto_ascenso_id: string; }
+const emptyPax = (): PaxForm => ({ nombre: "", apellido: "", dni: "", fecha_nacimiento: "", telefono: "", punto_ascenso_id: "" });
+
+function EditBookingModal({ reserva, onClose, onSaved }: {
+  reserva: Reserva;
+  onClose: () => void;
+  onSaved: (updated: Reserva) => void;
+}) {
+  const [paquetes, setPaquetes] = useState<{ id: number; titulo_subtitulo: string }[]>([]);
+  const [vendedores, setVendedores] = useState<VendedorOption[]>([]);
+  const [paqueteDetalle, setPaqueteDetalle] = useState<PaqueteDetalle | null>(null);
+  const [loadingOpts, setLoadingOpts] = useState(true);
+
+  const [paqueteId, setPaqueteId] = useState(String(reserva.paquete_id));
+  const [hotelId, setHotelId] = useState(reserva.hotel_id ? String(reserva.hotel_id) : "");
+  const [vendedorId, setVendedorId] = useState(reserva.vendedor_id ? String(reserva.vendedor_id) : "particular");
+  const [clienteNombre, setClienteNombre] = useState(reserva.cliente_nombre ?? "");
+  const [clienteEmail, setClienteEmail] = useState(reserva.cliente_email ?? "");
+  const [clienteTelefono, setClienteTelefono] = useState(reserva.cliente_telefono ?? "");
+  const [adultos, setAdultos] = useState(reserva.pasajeros_adultos);
+  const [menores, setMenores] = useState(reserva.pasajeros_menores);
+  const [precioTotal, setPrecioTotal] = useState(String(reserva.precio_total));
+  const [fechaSalida, setFechaSalida] = useState(reserva.fecha_salida ?? "");
+  const [pasajeros, setPasajeros] = useState<PaxForm[]>(
+    reserva.pasajeros.length > 0
+      ? reserva.pasajeros.map((p) => ({
+          nombre: p.nombre,
+          apellido: p.apellido,
+          dni: p.dni ?? "",
+          fecha_nacimiento: p.fecha_nacimiento ?? "",
+          telefono: p.telefono ?? "",
+          punto_ascenso_id: "",
+        }))
+      : [emptyPax()]
+  );
+  const [expanded, setExpanded] = useState(0);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  // Puntos de ascenso combinados del paquete actual
+  const puntosAscenso = useMemo<PuntoAscenso[]>(() => {
+    if (!paqueteDetalle) return [];
+    const combined = [...(paqueteDetalle.puntos_ascenso ?? [])];
+    if (paqueteDetalle.aereo_incluido) combined.push(...(paqueteDetalle.aereo_puntos_ascenso ?? []));
+    const seen = new Set();
+    return combined.filter((p) => { if (seen.has(p.id)) return false; seen.add(p.id); return true; });
+  }, [paqueteDetalle]);
+
+  // Load paquetes and vendedores once
+  useEffect(() => {
+    Promise.all([
+      fetchApi("/packages/"),
+      fetchApi("/users/?rol=vendedor"),
+    ]).then(([pkgs, vends]) => {
+      setPaquetes(pkgs);
+      setVendedores(vends);
+    }).catch(() => {}).finally(() => setLoadingOpts(false));
+  }, []);
+
+  // Load package detail whenever paqueteId changes
+  useEffect(() => {
+    if (!paqueteId) { setPaqueteDetalle(null); return; }
+    fetchApi(`/packages/${paqueteId}`).then((d) => {
+      setPaqueteDetalle(d);
+      // Reset hotel if new package doesn't have the current hotel
+      setHotelId((prev) => {
+        const still = d.hotel_detalles?.some((h: HotelDetalle) => String(h.hotel_id) === prev);
+        return still ? prev : (d.hotel_detalles?.[0] ? String(d.hotel_detalles[0].hotel_id) : "");
+      });
+    }).catch(() => {});
+  }, [paqueteId]);
+
+  function syncPaxCount(newTotal: number) {
+    setPasajeros((prev) => {
+      if (newTotal > prev.length) return [...prev, ...Array(newTotal - prev.length).fill(null).map(emptyPax)];
+      return prev.slice(0, newTotal);
+    });
+  }
+
+  function updatePax(idx: number, field: keyof PaxForm, value: string) {
+    setPasajeros((prev) => prev.map((p, i) => i === idx ? { ...p, [field]: value } : p));
+  }
+
+  async function handleSave() {
+    if (!clienteNombre.trim()) { setError("Ingresá el nombre del cliente."); return; }
+    for (let i = 0; i < pasajeros.length; i++) {
+      const p = pasajeros[i];
+      if (!p.nombre.trim() || !p.apellido.trim()) { setError(`Completá nombre y apellido del pasajero ${i + 1}.`); setExpanded(i); return; }
+      if (!p.dni.trim()) { setError(`Ingresá el DNI del pasajero ${i + 1}.`); setExpanded(i); return; }
+    }
+    setError(""); setSaving(true);
+    try {
+      const body: Record<string, unknown> = {
+        paquete_id: parseInt(paqueteId),
+        hotel_id: hotelId ? parseInt(hotelId) : null,
+        cliente_nombre: clienteNombre.trim(),
+        cliente_email: clienteEmail.trim() || null,
+        cliente_telefono: clienteTelefono.trim() || null,
+        pasajeros_adultos: adultos,
+        pasajeros_menores: menores,
+        precio_total: parseFloat(precioTotal) || reserva.precio_total,
+        fecha_salida: fechaSalida || null,
+        pasajeros: pasajeros.map((p) => ({
+          nombre: p.nombre,
+          apellido: p.apellido,
+          dni: p.dni || undefined,
+          fecha_nacimiento: p.fecha_nacimiento || undefined,
+          telefono: p.telefono || undefined,
+          punto_ascenso_id: p.punto_ascenso_id ? parseInt(p.punto_ascenso_id) : undefined,
+        })),
+      };
+      if (vendedorId !== "particular") body.vendedor_id = parseInt(vendedorId);
+      const updated = await fetchApi(`/bookings/${reserva.id}`, { method: "PUT", body: JSON.stringify(body) });
+      onSaved(updated);
+      onClose();
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Error al modificar la reserva.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const totalPax = adultos + menores;
+  const hotelOpciones = paqueteDetalle?.hotel_detalles ?? [];
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl flex flex-col max-h-[90vh] overflow-hidden">
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+          <div className="flex items-center gap-3">
+            <h2 className="text-2xl font-black text-gray-900">Modificar reserva</h2>
+            <span className="text-sm font-bold text-gray-400">#{reserva.id}</span>
+          </div>
+          <button onClick={onClose} className="p-1 rounded-lg hover:bg-gray-100 transition-colors">
+            <X className="w-5 h-5 text-gray-500" />
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
+          {loadingOpts ? (
+            <div className="flex items-center gap-2 text-gray-400 py-8 justify-center">
+              <Loader2 className="w-5 h-5 animate-spin" />
+            </div>
+          ) : (
+            <>
+              {/* Paquete */}
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-1.5">Paquete *</label>
+                <select
+                  value={paqueteId}
+                  onChange={(e) => setPaqueteId(e.target.value)}
+                  className="w-full h-11 px-4 rounded-xl border-2 border-gray-200 bg-white text-sm font-medium text-gray-700 focus:outline-none focus:border-[#1D5D8C] transition-colors appearance-none"
+                >
+                  <option value="">Seleccionar paquete...</option>
+                  {paquetes.map((p) => (
+                    <option key={p.id} value={p.id}>{p.titulo_subtitulo}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Hotel */}
+              {hotelOpciones.length > 1 && (
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-1.5">Hotel</label>
+                  <div className="space-y-2">
+                    {hotelOpciones.map((d) => (
+                      <label
+                        key={d.hotel_id}
+                        className={cn(
+                          "flex items-center justify-between gap-3 cursor-pointer px-4 py-3 rounded-xl border-2 transition-colors",
+                          String(d.hotel_id) === hotelId ? "border-[#1D5D8C] bg-[#1D5D8C]/5" : "border-gray-200 hover:border-gray-300"
+                        )}
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <input
+                            type="radio"
+                            name="edit_hotel"
+                            value={String(d.hotel_id)}
+                            checked={String(d.hotel_id) === hotelId}
+                            onChange={() => setHotelId(String(d.hotel_id))}
+                            className="accent-[#1D5D8C]"
+                          />
+                          <div>
+                            <p className="text-sm font-bold text-gray-800">{d.hotel?.nombre ?? `Hotel ${d.hotel_id}`}</p>
+                            {d.regimen && <p className="text-xs text-gray-500">{d.regimen}</p>}
+                          </div>
+                        </div>
+                        {d.precio != null && d.precio > 0 && (
+                          <span className="text-sm font-black text-[#1D5D8C]">${d.precio.toLocaleString("es-AR")}</span>
+                        )}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Vendedor */}
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-1.5">Vendedor</label>
+                <select
+                  value={vendedorId}
+                  onChange={(e) => setVendedorId(e.target.value)}
+                  className="w-full h-11 px-4 rounded-xl border-2 border-gray-200 bg-white text-sm font-medium text-gray-700 focus:outline-none focus:border-[#1D5D8C] transition-colors appearance-none"
+                >
+                  <option value="particular">Particular (sin vendedor asignado)</option>
+                  {vendedores.map((v) => (
+                    <option key={v.id} value={v.id}>{v.nombre_sistema || v.nombre}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Cliente */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div className="md:col-span-1">
+                  <label className="block text-sm font-bold text-gray-700 mb-1.5">Nombre del cliente *</label>
+                  <input value={clienteNombre} onChange={(e) => setClienteNombre(e.target.value)} placeholder="Nombre y apellido" className="w-full h-11 px-4 rounded-xl border-2 border-gray-200 text-sm font-medium text-gray-800 placeholder:text-gray-400 placeholder:font-normal focus:outline-none focus:border-[#1D5D8C] transition-colors" />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-1.5">Email</label>
+                  <input value={clienteEmail} onChange={(e) => setClienteEmail(e.target.value)} placeholder="email@ejemplo.com" type="email" className="w-full h-11 px-4 rounded-xl border-2 border-gray-200 text-sm font-medium text-gray-800 placeholder:text-gray-400 placeholder:font-normal focus:outline-none focus:border-[#1D5D8C] transition-colors" />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-1.5">Teléfono</label>
+                  <input value={clienteTelefono} onChange={(e) => setClienteTelefono(e.target.value)} placeholder="11-1234-5678" type="tel" className="w-full h-11 px-4 rounded-xl border-2 border-gray-200 text-sm font-medium text-gray-800 placeholder:text-gray-400 placeholder:font-normal focus:outline-none focus:border-[#1D5D8C] transition-colors" />
+                </div>
+              </div>
+
+              {/* Fecha salida y precio */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-1.5">Fecha de salida</label>
+                  <input type="date" value={fechaSalida} onChange={(e) => setFechaSalida(e.target.value)} className="w-full h-11 px-4 rounded-xl border-2 border-gray-200 text-sm font-medium text-gray-700 focus:outline-none focus:border-[#1D5D8C] transition-colors" />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-1.5">Precio total</label>
+                  <input type="number" value={precioTotal} onChange={(e) => setPrecioTotal(e.target.value)} className="w-full h-11 px-4 rounded-xl border-2 border-gray-200 text-sm font-medium text-gray-700 focus:outline-none focus:border-[#1D5D8C] transition-colors" />
+                </div>
+              </div>
+
+              {/* Pasajeros count */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-1.5">Adultos</label>
+                  <div className="flex items-center gap-3">
+                    <button type="button" onClick={() => { const v = Math.max(1, adultos - 1); setAdultos(v); syncPaxCount(v + menores); }} className="w-8 h-8 border border-gray-300 rounded-lg flex items-center justify-center text-gray-600 hover:bg-gray-100 font-bold">−</button>
+                    <span className="font-bold text-gray-800 w-4 text-center">{adultos}</span>
+                    <button type="button" onClick={() => { const v = adultos + 1; setAdultos(v); syncPaxCount(v + menores); }} className="w-8 h-8 border border-gray-300 rounded-lg flex items-center justify-center text-gray-600 hover:bg-gray-100 font-bold">+</button>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-1.5">Menores</label>
+                  <div className="flex items-center gap-3">
+                    <button type="button" onClick={() => { const v = Math.max(0, menores - 1); setMenores(v); syncPaxCount(adultos + v); }} className="w-8 h-8 border border-gray-300 rounded-lg flex items-center justify-center text-gray-600 hover:bg-gray-100 font-bold">−</button>
+                    <span className="font-bold text-gray-800 w-4 text-center">{menores}</span>
+                    <button type="button" onClick={() => { const v = menores + 1; setMenores(v); syncPaxCount(adultos + v); }} className="w-8 h-8 border border-gray-300 rounded-lg flex items-center justify-center text-gray-600 hover:bg-gray-100 font-bold">+</button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Pasajeros forms */}
+              <div>
+                <p className="text-sm font-bold text-gray-700 mb-3">Datos de los pasajeros ({totalPax})</p>
+                <div className="space-y-2 rounded-xl border border-gray-200 overflow-hidden">
+                  {pasajeros.map((pax, idx) => (
+                    <div key={idx} className="border-b border-gray-100 last:border-0">
+                      <button
+                        type="button"
+                        onClick={() => setExpanded(expanded === idx ? -1 : idx)}
+                        className="w-full flex items-center justify-between px-5 py-3.5 text-sm font-semibold text-gray-800 hover:bg-gray-50 transition-colors"
+                      >
+                        <span>
+                          Pasajero {idx + 1} {idx < adultos ? "(Adulto)" : "(Menor)"}
+                          {pax.nombre && pax.apellido && <span className="font-normal text-gray-500 ml-2">— {pax.nombre} {pax.apellido}</span>}
+                        </span>
+                        {expanded === idx ? <ChevronLeft className="w-4 h-4 rotate-90 text-gray-400" /> : <ChevronLeft className="w-4 h-4 -rotate-90 text-gray-400" />}
+                      </button>
+                      {expanded === idx && (
+                        <div className="px-5 pb-4 grid grid-cols-2 gap-3">
+                          <input placeholder="Nombre *" value={pax.nombre} onChange={(e) => updatePax(idx, "nombre", e.target.value)} className="px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-[#1D5D8C]" />
+                          <input placeholder="Apellido *" value={pax.apellido} onChange={(e) => updatePax(idx, "apellido", e.target.value)} className="px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-[#1D5D8C]" />
+                          <input placeholder="DNI *" value={pax.dni} onChange={(e) => updatePax(idx, "dni", e.target.value)} className="px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-[#1D5D8C] col-span-2" />
+                          <div className="col-span-2 flex flex-col gap-1">
+                            <label className="text-xs text-gray-500 font-medium">Fecha de nacimiento</label>
+                            <input type="date" value={pax.fecha_nacimiento} onChange={(e) => updatePax(idx, "fecha_nacimiento", e.target.value)} className="px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-[#1D5D8C] text-gray-700" />
+                          </div>
+                          <input placeholder="Teléfono" value={pax.telefono} onChange={(e) => updatePax(idx, "telefono", e.target.value)} className="px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-[#1D5D8C] col-span-2" />
+                          {puntosAscenso.length > 0 && (
+                            <select
+                              value={pax.punto_ascenso_id}
+                              onChange={(e) => updatePax(idx, "punto_ascenso_id", e.target.value)}
+                              className="px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-[#1D5D8C] bg-white text-gray-700 col-span-2"
+                            >
+                              <option value="">Lugar de carga / ascenso</option>
+                              {puntosAscenso.map((p) => (
+                                <option key={p.id} value={p.id}>{p.nombre_lugar}</option>
+                              ))}
+                            </select>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {error && (
+                <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-xl px-4 py-3 font-medium">{error}</p>
+              )}
+            </>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-end gap-3">
+          <button onClick={onClose} className="px-5 py-2.5 rounded-xl border-2 border-gray-200 text-gray-600 font-bold text-sm hover:border-gray-300 transition-colors">
+            Cancelar
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={saving || loadingOpts}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#1D5D8C] text-white font-bold text-sm hover:bg-[#164a70] transition-colors disabled:opacity-60"
+          >
+            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
+            Guardar cambios
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Create Booking Modal ─────────────────────────────────────────────────────
 
 interface PaqueteOption { id: number; titulo_subtitulo: string; precio_base: number; precio_adicional: number; moneda: string; }
-interface VendedorOption { id: number; nombre: string; nombre_sistema?: string; }
-interface PaxForm { nombre: string; apellido: string; dni: string; fecha_nacimiento: string; telefono: string; }
-const emptyPax = (): PaxForm => ({ nombre: "", apellido: "", dni: "", fecha_nacimiento: "", telefono: "" });
 
 function CreateBookingModal({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
   const [paquetes, setPaquetes] = useState<PaqueteOption[]>([]);
@@ -688,6 +1061,7 @@ export default function BookingsPage() {
 
   const [selected, setSelected] = useState<Reserva | null>(null);
   const [showCreate, setShowCreate] = useState(false);
+  const [editTarget, setEditTarget] = useState<Reserva | null>(null);
 
   async function load() {
     setLoading(true);
@@ -948,13 +1322,25 @@ export default function BookingsPage() {
         </p>
       )}
 
-      {selected && (
+      {selected && !editTarget && (
         <DetailModal
           reserva={selected}
           onClose={() => setSelected(null)}
           onUpdate={(updated) => {
             handleUpdate(updated);
             setSelected(updated);
+          }}
+          onEdit={() => { setEditTarget(selected); setSelected(null); }}
+        />
+      )}
+
+      {editTarget && (
+        <EditBookingModal
+          reserva={editTarget}
+          onClose={() => setEditTarget(null)}
+          onSaved={(updated) => {
+            handleUpdate(updated);
+            setEditTarget(null);
           }}
         />
       )}
