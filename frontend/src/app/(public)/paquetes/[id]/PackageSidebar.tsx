@@ -63,8 +63,9 @@ export function PackageSidebar({ paquete }: Props) {
     }
   }, [isAdmin]);
 
-  // Todos los hoteles del paquete con info de hotel
-  const todosHoteles = paquete.hotel_detalles?.filter((d) => d.hotel) ?? [];
+  // Todos los hoteles del paquete con info de hotel, ordenados por precio ascendente
+  const todosHoteles = (paquete.hotel_detalles?.filter((d) => d.hotel) ?? [])
+    .sort((a, b) => (a.precio ?? 0) - (b.precio ?? 0));
   const tieneOpcionesHotel = todosHoteles.length > 1;
   const primerHotelId = todosHoteles[0]?.hotel_id != null ? String(todosHoteles[0].hotel_id) : "";
   const [hotelSeleccionado, setHotelSeleccionado] = useState<string>(primerHotelId);

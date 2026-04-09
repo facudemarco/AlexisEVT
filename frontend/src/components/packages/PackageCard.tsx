@@ -54,7 +54,7 @@ export function PackageCard({ pkg, compact = false }: { pkg: Package; compact?: 
 
   if (compact) {
     return (
-      <div className="group relative w-full rounded-2xl overflow-hidden shadow-lg h-[420px]">
+      <Link href={`/paquetes/${pkg.id}`} className="group relative w-full rounded-2xl overflow-hidden shadow-lg h-[420px] block">
         {/* Background */}
         <div className="absolute inset-0 z-0">
           <Image
@@ -130,19 +130,17 @@ export function PackageCard({ pkg, compact = false }: { pkg: Package; compact?: 
               )}
             </div>
 
-            <Link href={`/paquetes/${pkg.id}`}>
-              <button className="bg-[#1D5D8C] hover:bg-[#164a70] text-white px-6 py-2.5 rounded-xl font-bold text-[15px] transition-colors shadow-md">
-                Ver más...
-              </button>
-            </Link>
+            <span className="bg-[#1D5D8C] group-hover:bg-[#164a70] text-white px-6 py-2.5 rounded-xl font-bold text-[15px] transition-colors shadow-md">
+              Ver más...
+            </span>
           </div>
         </div>
-      </div>
+      </Link>
     );
   }
 
   return (
-    <div className="group relative w-full rounded-2xl overflow-hidden shadow-lg h-[420px]">
+    <Link href={`/paquetes/${pkg.id}`} className="group relative w-full rounded-2xl overflow-hidden shadow-lg h-[420px] block">
       {/* Background */}
       <div className="absolute inset-0 z-0">
         <Image
@@ -225,14 +223,12 @@ export function PackageCard({ pkg, compact = false }: { pkg: Package; compact?: 
             )}
           </div>
 
-          <Link href={`/paquetes/${pkg.id}`}>
-            <button className="bg-[#1D5D8C] hover:bg-[#164a70] text-white px-6 py-2.5 rounded-xl font-bold text-[15px] transition-colors shadow-md">
-              Ver más...
-            </button>
-          </Link>
+          <span className="bg-[#1D5D8C] group-hover:bg-[#164a70] text-white px-6 py-2.5 rounded-xl font-bold text-[15px] transition-colors shadow-md">
+            Ver más...
+          </span>
         </div>
 
       </div>
-    </div>
+    </Link>
   );
 }
