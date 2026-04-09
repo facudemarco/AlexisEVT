@@ -54,7 +54,15 @@ interface ReservaParaSelector {
   id: number;
   cliente_nombre: string | null;
   precio_total: number;
-  paquete?: { titulo_subtitulo: string; gastos_reserva: number; precio_base: number; destino?: { nombre: string } } | null;
+  pasajeros_adultos: number;
+  pasajeros_menores: number;
+  paquete?: {
+    titulo_subtitulo: string;
+    precio_base: number;
+    precio_adicional: number;
+    gastos_reserva: number;
+    destino?: { nombre: string };
+  } | null;
   estado_reserva: string;
 }
 
@@ -96,28 +104,43 @@ function NuevaLiquidacionModal({
 
   const handleSelectReserva = (r: ReservaParaSelector) => {
     setSelectedReserva(r);
-    const preItems = [];
+    const totalPax = (r.pasajeros_adultos ?? 1) + (r.pasajeros_menores ?? 0);
+    const preItems: { descripcion: string; precio: string; cant_pax: number; aplica_comision: boolean }[] = [];
+
     if (r.paquete) {
-      const pax = 1;
+      // Precio base — comisionable
       preItems.push({
         descripcion: "Precio de venta",
         precio: String(r.paquete.precio_base || r.precio_total),
-        cant_pax: pax,
+        cant_pax: totalPax,
         aplica_comision: true,
       });
+
+      // Precio adicional (ej: adicional cama) — comisionable
+      if (r.paquete.precio_adicional && Number(r.paquete.precio_adicional) > 0) {
+        preItems.push({
+          descripcion: "Adicional",
+          precio: String(r.paquete.precio_adicional),
+          cant_pax: r.pasajeros_adultos ?? 1,
+          aplica_comision: true,
+        });
+      }
+
+      // Gastos de reserva (gastos administrativos) — NO comisionable
       if (r.paquete.gastos_reserva && Number(r.paquete.gastos_reserva) > 0) {
         preItems.push({
-          descripcion: "Gastos de reserva",
+          descripcion: "Gastos administrativos",
           precio: String(r.paquete.gastos_reserva),
-          cant_pax: pax,
+          cant_pax: totalPax,
           aplica_comision: false,
         });
       }
     }
+
     setItems(
       preItems.length
         ? preItems
-        : [{ descripcion: "Precio de venta", precio: String(r.precio_total), cant_pax: 1, aplica_comision: true }]
+        : [{ descripcion: "Precio de venta", precio: String(r.precio_total), cant_pax: totalPax, aplica_comision: true }]
     );
   };
 
