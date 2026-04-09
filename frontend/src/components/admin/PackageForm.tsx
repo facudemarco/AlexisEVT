@@ -271,6 +271,137 @@ function Divider({ label }: { label: string }) {
   );
 }
 
+// ── ImageFocalPicker ───────────────────────────────────────────────────────
+
+function parsePos(pos: string): [number, number] {
+  const toNum = (v: string): number => {
+    if (v === "left" || v === "top") return 0;
+    if (v === "center") return 50;
+    if (v === "right" || v === "bottom") return 100;
+    const n = parseFloat(v);
+    return isNaN(n) ? 50 : Math.max(0, Math.min(100, n));
+  };
+  const parts = pos.trim().split(/\s+/);
+  return [toNum(parts[0] ?? "center"), toNum(parts[1] ?? "center")];
+}
+
+function ImageFocalPicker({
+  src,
+  position,
+  onChange,
+  onChangeImage,
+  onRemove,
+}: {
+  src: string;
+  position: string;
+  onChange: (pos: string) => void;
+  onChangeImage: (file: File) => void;
+  onRemove: () => void;
+}) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [dragging, setDragging] = useState(false);
+  const dragRef = useRef<{ mouseX: number; mouseY: number; startX: number; startY: number } | null>(null);
+
+  const [posX, posY] = parsePos(position);
+
+  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    dragRef.current = { mouseX: e.clientX, mouseY: e.clientY, startX: posX, startY: posY };
+    setDragging(true);
+  };
+
+  useEffect(() => {
+    if (!dragging) return;
+
+    const onMove = (e: MouseEvent) => {
+      if (!dragRef.current || !containerRef.current) return;
+      const rect = containerRef.current.getBoundingClientRect();
+      const dx = e.clientX - dragRef.current.mouseX;
+      const dy = e.clientY - dragRef.current.mouseY;
+      // Grab metaphor: drag right → image moves right → reveals left side → x decreases
+      const newX = Math.round(Math.max(0, Math.min(100, dragRef.current.startX - (dx / rect.width) * 100)));
+      const newY = Math.round(Math.max(0, Math.min(100, dragRef.current.startY - (dy / rect.height) * 100)));
+      onChange(`${newX}% ${newY}%`);
+    };
+
+    const onUp = () => setDragging(false);
+
+    document.addEventListener("mousemove", onMove);
+    document.addEventListener("mouseup", onUp);
+    return () => {
+      document.removeEventListener("mousemove", onMove);
+      document.removeEventListener("mouseup", onUp);
+    };
+  }, [dragging, onChange]);
+
+  return (
+    <div
+      ref={containerRef}
+      className={cn(
+        "relative w-full h-44 rounded-xl overflow-hidden border-2 select-none",
+        dragging
+          ? "cursor-grabbing border-[#1D5D8C]"
+          : "cursor-grab border-gray-200 hover:border-[#1D5D8C]/50"
+      )}
+      onMouseDown={handleMouseDown}
+    >
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={src}
+        alt="Preview"
+        draggable={false}
+        className="w-full h-full object-cover pointer-events-none"
+        style={{ objectPosition: position }}
+      />
+
+      {/* Crosshair focal point — visible mientras se arrastra */}
+      {dragging && (
+        <div
+          className="absolute w-7 h-7 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+          style={{ left: `${posX}%`, top: `${posY}%` }}
+        >
+          <div className="absolute inset-0 rounded-full border-2 border-white shadow-md" />
+          <div className="absolute left-1/2 top-0 h-full w-px bg-white/80 -translate-x-1/2" />
+          <div className="absolute top-1/2 left-0 w-full h-px bg-white/80 -translate-y-1/2" />
+        </div>
+      )}
+
+      {/* Hint — solo cuando no se arrastra */}
+      {!dragging && (
+        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black/55 text-white text-[11px] font-semibold px-3 py-1 rounded-full pointer-events-none whitespace-nowrap">
+          Arrastrá para reencuadrar
+        </div>
+      )}
+
+      {/* Botones — top-right, capturan el mousedown para no iniciar drag */}
+      <div
+        className="absolute top-2 right-2 flex gap-2"
+        onMouseDown={(e) => e.stopPropagation()}
+      >
+        <label className="cursor-pointer flex items-center gap-1.5 bg-white/90 text-gray-800 font-bold text-xs px-3 py-1.5 rounded-lg hover:bg-white transition-colors shadow-sm">
+          <ImagePlus className="w-3.5 h-3.5" />
+          Cambiar
+          <input
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => { const f = e.target.files?.[0]; if (f) onChangeImage(f); }}
+          />
+        </label>
+        <button
+          type="button"
+          onClick={onRemove}
+          className="flex items-center gap-1.5 bg-red-500/90 text-white font-bold text-xs px-3 py-1.5 rounded-lg hover:bg-red-500 transition-colors shadow-sm"
+        >
+          <X className="w-3.5 h-3.5" />
+          Quitar
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ── Componente principal ───────────────────────────────────────────────────
 
 interface Props {
@@ -502,65 +633,13 @@ export function PackageForm({ initialData, packageId }: Props) {
         <div>
           <Label>Imagen del paquete</Label>
           {form.imagen_url ? (
-            <div className="space-y-3">
-              <div className="relative w-full h-44 rounded-xl overflow-hidden border-2 border-gray-200 group">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={form.imagen_url}
-                  alt="Preview"
-                  className="w-full h-full object-cover"
-                  style={{ objectPosition: form.imagen_posicion }}
-                />
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
-                  <label className="cursor-pointer flex items-center gap-2 bg-white text-gray-800 font-bold text-sm px-4 py-2 rounded-lg hover:bg-gray-100 transition-colors">
-                    <ImagePlus className="w-4 h-4" />
-                    Cambiar
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageUpload(f); }}
-                    />
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => set("imagen_url", "")}
-                    className="flex items-center gap-2 bg-red-500 text-white font-bold text-sm px-4 py-2 rounded-lg hover:bg-red-600 transition-colors"
-                  >
-                    <X className="w-4 h-4" />
-                    Quitar
-                  </button>
-                </div>
-              </div>
-
-              {/* Focal point picker */}
-              <div className="flex items-center gap-4 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3">
-                <span className="text-xs font-bold text-gray-500 uppercase tracking-wide whitespace-nowrap">Posición</span>
-                <div className="grid grid-cols-3 gap-1.5">
-                  {([
-                    ["top left",    "↖"], ["top",    "↑"], ["top right",    "↗"],
-                    ["left",        "←"], ["center", "·"], ["right",        "→"],
-                    ["bottom left", "↙"], ["bottom", "↓"], ["bottom right", "↘"],
-                  ] as [string, string][]).map(([pos, icon]) => (
-                    <button
-                      key={pos}
-                      type="button"
-                      onClick={() => set("imagen_posicion", pos)}
-                      title={pos}
-                      className={cn(
-                        "w-8 h-8 rounded-lg text-sm font-bold transition-colors",
-                        form.imagen_posicion === pos
-                          ? "bg-[#1D5D8C] text-white shadow"
-                          : "bg-white border border-gray-200 text-gray-500 hover:border-[#1D5D8C] hover:text-[#1D5D8C]"
-                      )}
-                    >
-                      {icon}
-                    </button>
-                  ))}
-                </div>
-                <span className="text-xs text-gray-400 italic">{form.imagen_posicion}</span>
-              </div>
-            </div>
+            <ImageFocalPicker
+              src={form.imagen_url}
+              position={form.imagen_posicion}
+              onChange={(pos) => set("imagen_posicion", pos)}
+              onChangeImage={handleImageUpload}
+              onRemove={() => set("imagen_url", "")}
+            />
           ) : (
             <label className={cn(
               "flex flex-col items-center justify-center w-full h-44 rounded-xl border-2 border-dashed border-gray-300 cursor-pointer",
