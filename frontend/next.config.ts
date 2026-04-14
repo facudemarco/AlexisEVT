@@ -10,7 +10,7 @@ const nextConfig: NextConfig = {
       // VPS de producción: imágenes servidas por nginx
       {
         protocol: 'https',
-        hostname: 'alexis.iwebtecnology.com',
+        hostname: 'alexis-evt.tur.ar',
         pathname: '/media/images/**',
       },
       // Dev local: FastAPI sirve las imágenes en localhost

@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   },
   description:
     "Descubrí los mejores paquetes de viaje y aventura con Alexis EVT. Miniturismo, destinos nacionales e internacionales. Reservas online simples y seguras.",
-  metadataBase: new URL("https://alexis.iwebtecnology.com"),
+  metadataBase: new URL("https://alexis-evt.tur.ar"),
   openGraph: {
     siteName: "Alexis EVT",
     locale: "es_AR",
