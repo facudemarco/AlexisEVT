@@ -113,13 +113,13 @@ export default async function PackageDetailPage({
       <section className="max-w-7xl mx-auto px-4 md:px-8 py-10">
         <div className="flex flex-col lg:flex-row gap-8 items-start">
 
-          {/* ── Sidebar (sticky) ────────────────────────────────────────── */}
-          <aside className="w-full lg:w-[300px] xl:w-[320px] flex-shrink-0 self-start sticky top-6">
+          {/* ── Reserva: debajo del contenido en mobile, sticky solo en desktop ── */}
+          <aside className="order-last lg:order-first w-full lg:w-[300px] xl:w-[320px] flex-shrink-0 self-start lg:sticky lg:top-6">
             <PackageSidebar paquete={paquete} />
           </aside>
 
           {/* ── Contenido derecho ───────────────────────────────────────── */}
-          <div className="flex-1 min-w-0 space-y-6">
+          <div className="order-first lg:order-last flex-1 min-w-0 space-y-6">
 
             {/* Breadcrumb tipo tab */}
             <div className="flex items-center gap-2 text-sm text-gray-500 border-b border-gray-300 pb-2">

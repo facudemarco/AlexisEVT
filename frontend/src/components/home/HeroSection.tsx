@@ -14,7 +14,7 @@ export function HeroSection() {
       {/* 
         Background Poster: Shows immediately while Vimeo loads 
       */}
-      <div 
+      <div id="inicio"
         className="absolute inset-0 bg-cover bg-center opacity-70"
         style={{ backgroundImage: "url('/resources/hero_cartelera.png')" }}
       />

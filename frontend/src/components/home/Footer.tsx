@@ -38,7 +38,7 @@ export function Footer() {
         </div>
 
         {/* Columna 2: Opciones de Viajes */}
-        <div className="flex flex-col items-center lg:items-start lg:w-[20%] text-center lg:text-left">
+        <div id="viajes" className="flex flex-col items-center lg:items-start lg:w-[20%] text-center lg:text-left">
           <h3 className="flex items-center gap-3 font-bold text-[1.2rem] mb-6 whitespace-nowrap">
              <Image src="/resources/opciones-viajes.svg" alt="Opciones de viajes" width={28} height={28} className="object-contain" />
              Opciones de viajes
@@ -46,19 +46,33 @@ export function Footer() {
           <ul className="space-y-4 text-[1rem]">
             <li className="flex items-center justify-center lg:justify-start gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-black shrink-0"></span>
-              MiniTurismo
+              <Link href="/categorias/miniturismo" className="hover:underline">
+                MiniTurismo
+              </Link>
             </li>
             <li className="flex items-center justify-center lg:justify-start gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-black shrink-0"></span>
-              Argentina
+              <Link href="/categorias/argentina" className="hover:underline">
+                Argentina
+              </Link>
             </li>
             <li className="flex items-center justify-center lg:justify-start gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-black shrink-0"></span>
-              Brasil
+              <Link href="/categorias/brasil" className="hover:underline">
+                Brasil
+              </Link>
             </li>
             <li className="flex items-center justify-center lg:justify-start gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-black shrink-0"></span>
-              Otros Internacionales
+              <Link href="/categorias/otros-internacionales" className="hover:underline">
+                Otros Internacionales
+              </Link>
+            </li>
+            <li className="flex items-center justify-center lg:justify-start gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-black shrink-0"></span>
+              <Link href="/categorias/elegi-donde-viajar" className="hover:underline">
+                Elegí dónde viajar
+              </Link>
             </li>
           </ul>
         </div>
@@ -70,7 +84,7 @@ export function Footer() {
         </div>
 
         {/* Columna 3: Canales de Comunicación */}
-        <div className="flex flex-col items-center lg:items-start lg:w-[35%] text-center lg:text-left">
+        <div id="contacto" className="flex flex-col items-center lg:items-start lg:w-[35%] text-center lg:text-left">
            <h3 className="flex items-center justify-center lg:justify-start gap-3 font-bold text-[1.2rem] mb-4">
              <Image src="/resources/canales-comunicacion.svg" alt="Canales de comunicación" width={28} height={28} className="object-contain" />
              Canales de comunicación
@@ -81,12 +95,17 @@ export function Footer() {
                <span className="w-1.5 h-1.5 rounded-full bg-black shrink-0"></span>
                Whatsapp (11-2172-1486)
                {/* Usamos un ícono customizado de whatsapp simple o podemos usar mensaje como fallback */}
-               <MessageCircle className="w-5 h-5 ml-2 cursor-pointer transition-transform group-hover:scale-110" />
+               <a href="https://wa.me/541121721486" target="_blank" rel="noopener noreferrer">
+                 <MessageCircle className="w-5 h-5 ml-2 cursor-pointer transition-transform group-hover:scale-110" />
+               </a>
             </li>
             <li className="flex items-center justify-center lg:justify-start gap-2 group">
               <span className="w-1.5 h-1.5 rounded-full bg-black shrink-0"></span>
               Email - comercial.alexisevt@gmail.com
-              <Mail className="w-5 h-5 ml-2 cursor-pointer transition-transform group-hover:scale-110" />
+                {/* Usamos un ícono customizado de mail simple o podemos usar mensaje como fallback */}
+                <a href="mailto:comercial.alexisevt@gmail.com">
+                  <Mail className="w-5 h-5 ml-2 cursor-pointer transition-transform group-hover:scale-110" />
+                </a>
             </li>
           </ul>
         </div>
@@ -103,11 +122,11 @@ export function Footer() {
              <Image src="/resources/mapa-sitio.svg" alt="Mapa del sitio" width={28} height={28} className="object-contain" />
              Mapa del sitio
           </h3>
-          <nav className="flex flex-col space-y-4">
-            <Link href="/" className="underline underline-offset-4 hover:text-gray-600 transition-colors">Inicio</Link>
-            <Link href="/" className="underline underline-offset-4 hover:text-gray-600 transition-colors">¿Quienes somos?</Link>
-            <Link href="/" className="underline underline-offset-4 hover:text-gray-600 transition-colors">Contacto</Link>
-            <Link href="/" className="underline underline-offset-4 hover:text-gray-600 transition-colors">Cartelera</Link>
+          <nav className="flex flex-col space-y-4 w-full">
+            <button onClick={scrollToTop} className="text-left underline underline-offset-4 hover:text-gray-600 transition-colors">Inicio</button>
+            <Link href="/quienes-somos" className="underline underline-offset-4 hover:text-gray-600 transition-colors">¿Quienes somos?</Link>
+            <Link href="/contacto" className="underline underline-offset-4 hover:text-gray-600 transition-colors">Contacto</Link>
+            <Link href="/cartelera" className="underline underline-offset-4 hover:text-gray-600 transition-colors">Cartelera</Link>
           </nav>
         </div>
 
@@ -123,7 +142,7 @@ export function Footer() {
           </button>
           
           {/* Instagram Avatar G */}
-          <Link href="#" className="w-10 h-10 overflow-hidden rounded-full hover:scale-110 transition-transform relative">
+          <Link href="https://www.instagram.com/alexis_evt/" className="w-10 h-10 overflow-hidden rounded-full hover:scale-110 transition-transform relative">
              <Image 
                src="/resources/instagram.svg"
                alt="Instagram"
@@ -133,7 +152,7 @@ export function Footer() {
           </Link>
 
           {/* Facebook */}
-           <Link href="#" className="w-10 h-10 overflow-hidden rounded-full hover:scale-110 transition-transform relative">
+           <Link href="https://www.facebook.com/profile.php?id=100084720687325" className="w-10 h-10 overflow-hidden rounded-full hover:scale-110 transition-transform relative">
              <Image 
                src="/resources/facebook.svg"
                alt="Facebook"
@@ -150,16 +169,14 @@ export function Footer() {
         <p>Todos los derechos reservados 2026 ® AlexisEVT</p>
         <div className="flex items-center gap-2 mt-4 md:mt-0">
           Desarrollado por: 
-          <div className="relative w-24 h-8">
-            <a href="https://iwebtecnology.com" target="_blank">
+          <Link href="https://iwebtecnology.com" target="_blank" className="relative block w-24 h-8">
             <Image 
               src="/resources/iweb.svg"
               alt="Desarrollado por iWEB"
               fill
               className="object-contain"
             />
-            </a>
-          </div>
+          </Link>
         </div>
       </div>
     </footer>

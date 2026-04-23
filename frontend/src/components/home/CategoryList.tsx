@@ -22,6 +22,11 @@ const categories = [
     slug: "otros-internacionales",
     image: "/resources/internacionales.png",
   },
+  {
+    title: "Elegí dónde viajar",
+    slug: "elegi-donde-viajar",
+    image: "/resources/Individuales.svg",
+  },
 ];
 
 export function CategoryList() {
@@ -33,25 +38,38 @@ export function CategoryList() {
         </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 max-w-5xl mx-auto">
-          {categories.map((cat, idx) => (
-            <Link href={`/categorias/${cat.slug}`} key={idx}>
-              <div className="group cursor-pointer relative h-[220px] md:h-[260px] w-full rounded-[1.5rem] md:rounded-[2rem] overflow-hidden shadow-lg transition-transform duration-300 hover:-translate-y-1 [will-change:transform] [transform:translateZ(0)]">
-                <Image
-                  src={cat.image}
-                  alt={cat.title}
-                  fill
-                  sizes="(max-width: 768px) 100vw, 50vw"
-                  className="object-cover transition-transform duration-300 group-hover:scale-[1.03] [will-change:transform]"
-                />
-                <div className="absolute inset-0 bg-black/10 group-hover:bg-black/20 transition-colors duration-300" />
-                <div className="absolute inset-0 p-6 flex items-end">
-                  <h3 className="text-white text-2xl font-bold uppercase tracking-wider drop-shadow-md">
-                    {cat.title}
-                  </h3>
+          {categories.map((cat, idx) => {
+            const isCenteredOddCard =
+              categories.length % 2 === 1 && idx === categories.length - 1;
+
+            return (
+              <Link
+                href={`/categorias/${cat.slug}`}
+                key={cat.slug}
+                className={
+                  isCenteredOddCard
+                    ? "md:col-span-2 md:w-[calc(50%-1rem)] md:justify-self-center"
+                    : undefined
+                }
+              >
+                <div className="group cursor-pointer relative h-[220px] md:h-[260px] w-full rounded-[1.5rem] md:rounded-[2rem] overflow-hidden shadow-lg transition-transform duration-300 hover:-translate-y-1 [will-change:transform] [transform:translateZ(0)]">
+                  <Image
+                    src={cat.image}
+                    alt={cat.title}
+                    fill
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                    className="object-cover transition-transform duration-300 group-hover:scale-[1.03] [will-change:transform]"
+                  />
+                  <div className="absolute inset-0 bg-black/10 group-hover:bg-black/20 transition-colors duration-300" />
+                  <div className="absolute inset-0 p-6 flex items-end">
+                    <h3 className="text-white text-2xl font-bold uppercase tracking-wider drop-shadow-md">
+                      {cat.title}
+                    </h3>
+                  </div>
                 </div>
-              </div>
-            </Link>
-          ))}
+              </Link>
+            );
+          })}
         </div>
       </div>
     </section>

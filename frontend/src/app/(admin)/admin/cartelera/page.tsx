@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo, useRef } from "react";
 import { fetchApi } from "@/lib/api";
-import { Pencil, Trash2, Plus, ListFilter, UploadCloud, Loader2, Image as ImageIcon } from "lucide-react";
+import { Pencil, Trash2, Plus, Loader2, Image as ImageIcon } from "lucide-react";
 import Image from "next/image";
 
 interface Cartel {
@@ -62,8 +62,8 @@ export default function CarteleraAdminPage() {
     try {
       await fetchApi(`/cartelera/${id}`, { method: "DELETE" });
       load();
-    } catch (e: any) {
-      alert(e.message || "Error al eliminar el cartel.");
+    } catch (e: unknown) {
+      alert(e instanceof Error ? e.message : "Error al eliminar el cartel.");
     }
   };
 
@@ -101,8 +101,8 @@ export default function CarteleraAdminPage() {
       if (!res.ok) throw new Error("Fallo al subir imagen");
       const data = await res.json();
       setImagenUrl(data.url);
-    } catch (err: any) {
-      alert(err.message || "Error al subir la imagen");
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : "Error al subir la imagen");
     } finally {
       setUploading(false);
     }
@@ -129,8 +129,8 @@ export default function CarteleraAdminPage() {
       }
       setShowModal(false);
       load();
-    } catch (e: any) {
-      alert(e.message || "Error al guardar el cartel");
+    } catch (e: unknown) {
+      alert(e instanceof Error ? e.message : "Error al guardar el cartel");
     } finally {
       setSaving(false);
     }
@@ -188,13 +188,13 @@ export default function CarteleraAdminPage() {
             {filtered.map((c) => (
               <tr key={c.id} className="hover:bg-gray-50 transition-colors">
                 <td className="px-6 py-3">
-                  <div className="w-20 h-28 bg-gray-100 rounded shadow-sm border border-gray-200 relative overflow-hidden flex-shrink-0">
+                  <div className="w-20 aspect-[3/4] bg-gray-100 rounded shadow-sm border border-gray-200 relative overflow-hidden flex-shrink-0">
                     <Image
                       src={resolveImgUrl(c.imagen_url)}
                       alt={c.nombre}
                       fill
                       sizes="80px"
-                      className="object-cover"
+                      className="object-contain"
                       unoptimized
                     />
                   </div>

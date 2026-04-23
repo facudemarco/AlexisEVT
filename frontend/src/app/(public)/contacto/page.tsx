@@ -37,7 +37,7 @@ export default function ContactoPage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div id="contacto" className="flex flex-col min-h-screen">
 
       {/* ── Hero con video ─────────────────────────────────────────────────── */}
       <section className="relative h-[480px] md:h-[560px] bg-gray-900 overflow-hidden flex-shrink-0">

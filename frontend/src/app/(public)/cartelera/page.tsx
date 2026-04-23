@@ -51,7 +51,7 @@ export default async function CarteleraPage() {
 
   return (
     /* This page is rendered inside (public)/layout.tsx which wraps with PublicHeader + Footer */
-    <div className="relative w-full min-h-screen bg-white">
+    <div id="cartelera" className="relative w-full min-h-screen bg-white">
       {/* Background hero image: full-page, low opacity, watermark effect */}
       <div className="absolute inset-0 z-0 pointer-events-none">
         <Image
@@ -90,14 +90,14 @@ export default async function CarteleraPage() {
               {grouped[periodo].map((cartel) => (
                 <div
                   key={cartel.id}
-                  className="relative w-full max-w-md aspect-[3/4] overflow-hidden rounded-md shadow-lg"
+                  className="relative w-full max-w-[560px] aspect-[3/4] overflow-hidden rounded-md bg-white shadow-lg"
                 >
                   <Image
                     src={resolveImageUrl(cartel.imagen_url)}
                     alt={cartel.nombre}
                     fill
-                    sizes="(max-width: 768px) 100vw, 500px"
-                    className="object-cover"
+                    sizes="(max-width: 768px) calc(100vw - 48px), 560px"
+                    className="object-contain"
                     unoptimized
                   />
                 </div>

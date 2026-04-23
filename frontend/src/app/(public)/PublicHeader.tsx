@@ -1,6 +1,7 @@
 "use client";
 
-import { Menu, UserCircle } from "lucide-react";
+import { useState } from "react";
+import { Menu, UserCircle, X } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
@@ -11,8 +12,28 @@ export function PublicHeader() {
   const pathname = usePathname();
   const isHome = pathname === '/';
   const { isAuthenticated, role } = useAuth();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const headerClasses = `absolute top-0 w-full z-50 py-4 ${isHome ? 'md:hidden' : ''}`;
+  const mobileMenuButtonClass = isHome
+    ? "md:hidden text-white hover:bg-white/10 ml-4"
+    : "md:hidden text-gray-900 hover:bg-gray-900/10 ml-4";
+  const accountHref = isAuthenticated
+    ? role === "admin"
+      ? "/admin"
+      : role === "vendedor"
+        ? "/mi-cuenta"
+        : null
+    : "/admin/login";
+  const accountLabel = isAuthenticated
+    ? role === "admin"
+      ? "Panel de control"
+      : role === "vendedor"
+        ? "Mi cuenta"
+        : null
+    : "Iniciar sesión";
+
+  const closeMenu = () => setIsMenuOpen(false);
 
   return (
     <header className={headerClasses}>
@@ -52,11 +73,46 @@ export function PublicHeader() {
               </Button>
             </Link>
           )}
-          <Button variant="ghost" size="icon" className="md:hidden text-white hover:bg-white/10 ml-4">
-            <Menu className="w-8 h-8" />
+          <Button
+            variant="ghost"
+            size="icon"
+            className={mobileMenuButtonClass}
+            aria-label={isMenuOpen ? "Cerrar menú" : "Abrir menú"}
+            aria-expanded={isMenuOpen}
+            onClick={() => setIsMenuOpen((open) => !open)}
+          >
+            {isMenuOpen ? <X className="w-8 h-8" /> : <Menu className="w-8 h-8" />}
           </Button>
         </div>
       </div>
+
+      {isMenuOpen && (
+        <div className="md:hidden absolute left-4 right-4 top-[148px] rounded-2xl bg-white shadow-2xl border border-gray-100 overflow-hidden">
+          <nav className="flex flex-col py-2 text-gray-900">
+            <Link href="/" onClick={closeMenu} className="px-5 py-3 font-bold hover:bg-sky-50">
+              Inicio
+            </Link>
+            <Link href="/cartelera" onClick={closeMenu} className="px-5 py-3 font-bold hover:bg-sky-50">
+              Cartelera
+            </Link>
+            <Link href="/quienes-somos" onClick={closeMenu} className="px-5 py-3 font-bold hover:bg-sky-50">
+              ¿Quiénes somos?
+            </Link>
+            <Link href="/contacto" onClick={closeMenu} className="px-5 py-3 font-bold hover:bg-sky-50">
+              Contacto
+            </Link>
+            {accountHref && accountLabel && (
+              <Link
+                href={accountHref}
+                onClick={closeMenu}
+                className="mx-4 my-3 rounded-xl bg-brand-primary px-5 py-3 text-center font-bold text-white"
+              >
+                {accountLabel}
+              </Link>
+            )}
+          </nav>
+        </div>
+      )}
     </header>
   );
 }

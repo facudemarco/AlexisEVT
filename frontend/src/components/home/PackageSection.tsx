@@ -4,7 +4,7 @@ import { Calendar, BedDouble, UtensilsCrossed } from "lucide-react";
 import { Paquete } from "@/types/package";
 
 // ── Categorías fijas (deben coincidir con CategoryList) ───────────────────────
-const CATEGORIAS_FIJAS = ["Miniturismo", "Argentina", "Brasil", "Internacional"];
+const CATEGORIAS_FIJAS = ["Miniturismo", "Argentina", "Brasil", "Internacional", "Elegí dónde viajar"];
 
 async function getPaquetes(): Promise<Paquete[]> {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api/v1";
