@@ -54,7 +54,7 @@ class ReservaResumen(BaseModel):
     id: int
     cliente_nombre: Optional[str] = None
     precio_total: float
-    paquete_id: int
+    paquete_id: Optional[int] = None
     paquete_titulo: Optional[str] = None
     destino_nombre: Optional[str] = None
     fecha_salida: Optional[date] = None
